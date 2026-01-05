@@ -1,0 +1,20 @@
+{
+    "name": "fme-backend",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^5.2.1",
+        "mssql": "^12.2.0",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.3",
+        "nodemailer": "^7.0.12",
+        "pdfkit": "^0.17.2",
+        "node-cron": "^4.2.1",
+        "node-fetch": "^2.7.0",
+        "body-parser": "^1.20.3"
+    },
+    "private": true
+}
