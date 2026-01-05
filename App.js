@@ -1,20 +1,38 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import HomeScreen from './src/screens/HomeScreen';
+import OtpScreen from './src/screens/OtpScreen';
+import PermissionsScreen from './src/screens/PermissionsScreen';
+import CameraScreen from './src/screens/CameraScreen';
+import ExaminationScreen from './src/screens/ExaminationScreen';
+
+import ProgramDetailsScreen from './src/screens/ProgramDetailsScreen';
+import QuestionsScreen from './src/screens/QuestionsScreen';
+import ReviewScreen from './src/screens/ReviewScreen';
+import ResultScreen from './src/screens/ResultScreen';
+
+const Stack = createStackNavigator();
+
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Otp" component={OtpScreen} />
+          <Stack.Screen name="Permissions" component={PermissionsScreen} />
+          <Stack.Screen name="Camera" component={CameraScreen} />
+          <Stack.Screen name="Examination" component={ExaminationScreen} />
+          {/* ExamOtp Removed */}
+          <Stack.Screen name="ProgramDetails" component={ProgramDetailsScreen} />
+          <Stack.Screen name="Questions" component={QuestionsScreen} />
+          <Stack.Screen name="Review" component={ReviewScreen} />
+          <Stack.Screen name="Result" component={ResultScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
