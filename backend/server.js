@@ -39,7 +39,7 @@ app.post('/api/upload-photo', async (req, res) => {
             .input('email', sql.NVarChar, email)
             .input('photo', sql.NVarChar(sql.MAX), photo) // Use MAX for large strings
             .query(`
-                UPDATE users 
+                UPDATE FME_logins.users 
                 SET photo = @photo 
                 WHERE email = @email
             `);
@@ -61,10 +61,10 @@ async function initializeDatabase() {
         const pool = await sql.connect(dbConfig);
 
         // Create Users table if not exists with 'name' column
-        const tableCheck = await pool.query(`SELECT * FROM sysobjects WHERE name='users' AND xtype='U'`);
+        const tableCheck = await pool.query(`SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'FME_logins' AND TABLE_NAME = 'users'`);
         if (tableCheck.recordset.length === 0) {
             await pool.query(`
-                CREATE TABLE users (
+                CREATE TABLE FME_logins.users (
                     id INT PRIMARY KEY IDENTITY(1,1),
                     email NVARCHAR(255) NOT NULL,
                     name NVARCHAR(100),
@@ -80,62 +80,62 @@ async function initializeDatabase() {
             console.log('Users table created.');
         } else {
             // Check Name Column
-            const nameCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'name' AND Object_ID = Object_ID(N'users')`);
+            const nameCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'name' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
             if (nameCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE users ADD name NVARCHAR(100)`);
+                await pool.query(`ALTER TABLE FME_logins.users ADD name NVARCHAR(100)`);
                 console.log('Name column added.');
             }
 
             // Check Photo
-            const photoCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'photo' AND Object_ID = Object_ID(N'users')`);
+            const photoCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'photo' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
             if (photoCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE users ADD photo NVARCHAR(MAX)`);
+                await pool.query(`ALTER TABLE FME_logins.users ADD photo NVARCHAR(MAX)`);
                 console.log('Photo column added.');
             } else {
                 // Ensure it is MAX
-                await pool.query(`ALTER TABLE users ALTER COLUMN photo NVARCHAR(MAX)`);
+                await pool.query(`ALTER TABLE FME_logins.users ALTER COLUMN photo NVARCHAR(MAX)`);
             }
 
             // Link Check (existing logic)
-            const locCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'latitude' AND Object_ID = Object_ID(N'users')`);
+            const locCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'latitude' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
             if (locCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE users ADD latitude NVARCHAR(50), longitude NVARCHAR(50), location_link NVARCHAR(MAX)`);
+                await pool.query(`ALTER TABLE FME_logins.users ADD latitude NVARCHAR(50), longitude NVARCHAR(50), location_link NVARCHAR(MAX)`);
                 console.log('Location columns added.');
             } else {
-                const linkCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'location_link' AND Object_ID = Object_ID(N'users')`);
+                const linkCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'location_link' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
                 if (linkCheck.recordset.length === 0) {
-                    await pool.query(`ALTER TABLE users ADD location_link NVARCHAR(MAX)`);
+                    await pool.query(`ALTER TABLE FME_logins.users ADD location_link NVARCHAR(MAX)`);
                     console.log('Location link column added.');
                 }
             }
 
             // Check Exam Score
-            const scoreCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'exam_score' AND Object_ID = Object_ID(N'users')`);
+            const scoreCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'exam_score' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
             if (scoreCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE users ADD exam_score INT`);
+                await pool.query(`ALTER TABLE FME_logins.users ADD exam_score INT`);
                 console.log('Exam score column added.');
             }
 
             // Check Last Login
-            const loginCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'last_login' AND Object_ID = Object_ID(N'users')`);
+            const loginCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'last_login' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
             if (loginCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE users ADD last_login DATETIME`);
+                await pool.query(`ALTER TABLE FME_logins.users ADD last_login DATETIME`);
                 console.log('Last login column added.');
             }
 
             // Check is_reported (for Cron)
-            const reportedCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'is_reported' AND Object_ID = Object_ID(N'users')`);
+            const reportedCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'is_reported' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
             if (reportedCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE users ADD is_reported BIT DEFAULT 0`);
+                await pool.query(`ALTER TABLE FME_logins.users ADD is_reported BIT DEFAULT 0`);
                 console.log('is_reported column added.');
             }
         }
 
-        // Create Questions table if not exists
-        const questionsTableCheck = await pool.query(`SELECT * FROM sysobjects WHERE name='questions' AND xtype='U'`);
+        // Create Questions table if not exists with ZED_MCQ_DB schema
+        const questionsTableCheck = await pool.query(`SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'ZED_MCQ_DB' AND TABLE_NAME = 'questions'`);
         if (questionsTableCheck.recordset.length === 0) {
             await pool.query(`
-                CREATE TABLE questions (
+                CREATE TABLE ZED_MCQ_DB.questions (
                     id INT PRIMARY KEY IDENTITY(1,1),
                     question_text NVARCHAR(MAX),
                     option_a NVARCHAR(255),
@@ -159,7 +159,7 @@ async function initializeDatabase() {
                     .input('option_e', sql.NVarChar, q.options.E || null)
                     .input('answer', sql.NVarChar, q.answer)
                     .query(`
-                        INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, option_e, correct_answer)
+                        INSERT INTO ZED_MCQ_DB.questions (question_text, option_a, option_b, option_c, option_d, option_e, correct_answer)
                         VALUES (@question, @option_a, @option_b, @option_c, @option_d, @option_e, @answer)
                     `);
             }
@@ -200,7 +200,7 @@ app.post('/api/login', async (req, res) => {
         const checkUser = await pool.request()
             .input('email', sql.NVarChar, email)
             .input('phone', sql.NVarChar, phone)
-            .query("SELECT TOP 1 * FROM users WHERE email = @email AND phone_number = @phone");
+            .query("SELECT TOP 1 * FROM FME_logins.users WHERE email = @email AND phone_number = @phone");
 
         if (checkUser.recordset.length > 0) {
             // User exists with same Email & Phone -> Update details (e.g., name)
@@ -209,7 +209,7 @@ app.post('/api/login', async (req, res) => {
                 .input('email', sql.NVarChar, email)
                 .input('phone', sql.NVarChar, phone)
                 .query(`
-                    UPDATE users 
+                    UPDATE FME_logins.users 
                     SET name = @name, last_login = GETDATE()
                     WHERE email = @email AND phone_number = @phone
                 `);
@@ -221,7 +221,7 @@ app.post('/api/login', async (req, res) => {
                 .input('email', sql.NVarChar, email)
                 .input('phone', sql.NVarChar, phone)
                 .query(`
-                    INSERT INTO users (name, email, phone_number, created_at, last_login)
+                    INSERT INTO FME_logins.users (name, email, phone_number, created_at, last_login)
                     VALUES (@name, @email, @phone, GETDATE(), GETDATE())
                 `);
             console.log(`New user registered: ${email}`);
@@ -344,7 +344,7 @@ app.post('/api/update-location', async (req, res) => {
             .input('longitude', sql.NVarChar, longitude.toString())
             .input('location_link', sql.NVarChar, locationLink)
             .query(`
-                UPDATE users 
+                UPDATE FME_logins.users 
                 SET latitude = @latitude, longitude = @longitude, location_link = @location_link
                 WHERE email = @email
             `);
@@ -387,7 +387,7 @@ app.post('/api/verify-otp', (req, res) => {
 app.get('/api/questions', async (req, res) => {
     try {
         const pool = await sql.connect(dbConfig);
-        const result = await pool.request().query('SELECT * FROM questions ORDER BY NEWID()');
+        const result = await pool.request().query('SELECT * FROM ZED_MCQ_DB.questions ORDER BY NEWID()');
         res.status(200).json(result.recordset);
     } catch (err) {
         console.error('Error fetching questions:', err);
@@ -426,7 +426,7 @@ app.post('/api/submit-result', async (req, res) => {
             .input('score', sql.Int, score)
             .input('certNo', sql.NVarChar, certNo) // Can be null
             .query(`
-                UPDATE users 
+                UPDATE FME_logins.users 
                 SET exam_score = @score, certificate_number = @certNo
                 WHERE email = @email
             `);

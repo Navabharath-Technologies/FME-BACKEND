@@ -14,7 +14,7 @@ const generateAndSendReport = async () => {
         pool = await sql.connect(dbConfig);
         // Fetch users who haven't been reported yet
         const result = await pool.request().query(`
-            SELECT * FROM users 
+            SELECT * FROM FME_logins.users 
             WHERE created_at >= CAST(DATEADD(day, -1, GETDATE()) AS DATE)
             AND created_at < CAST(GETDATE() AS DATE)
             ORDER BY created_at DESC
@@ -109,7 +109,7 @@ const generateAndSendReport = async () => {
                 // Mark users as reported
                 if (userIds.length > 0) {
                     await pool.request().query(`
-                        UPDATE users 
+                        UPDATE FME_logins.users 
                         SET is_reported = 1 
                         WHERE id IN(${userIds.join(',')})
             `);
