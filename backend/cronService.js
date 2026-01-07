@@ -4,7 +4,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const dbConfig = require('./dbConfig');
-const { transporter } = require('./emailService'); // We'll need to export transporter from emailService
+// Transporter removed as we are using Resend directly inside the function
 
 // Function to generate PDF and send email
 const generateAndSendReport = async () => {
@@ -90,21 +90,32 @@ const generateAndSendReport = async () => {
         stream.on('finish', async () => {
             try {
                 // Send Email
-                const mailOptions = {
-                    from: 'FME App <zedcertifications@navabharathtechnologies.com>',
+                // Send Email via Resend
+                const { Resend } = require('resend');
+                const resend = new Resend(process.env.RESEND_API_KEY);
+                const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabharathtechnologies.com';
+
+                const pdfBuffer = fs.readFileSync(filePath);
+
+                const { error } = await resend.emails.send({
+                    from: FROM_EMAIL,
                     to: 'zedcertifications@navabharathtechnologies.com',
                     subject: 'FME App New Entries Report',
                     text: `Please find attached the PDF report containing ${users.length} new user entries.`,
                     attachments: [
                         {
                             filename: `User_Report_${new Date().toISOString().split('T')[0]}.pdf`,
-                            path: filePath
+                            content: pdfBuffer
                         }
                     ]
-                };
+                });
 
-                await transporter.sendMail(mailOptions);
-                console.log('[CRON] Report email sent successfully.');
+                if (error) {
+                    console.error('[CRON] Error sending email via Resend:', error);
+                    return;
+                }
+
+                console.log('[CRON] Report email sent successfully via Resend.');
 
                 // Mark users as reported
                 if (userIds.length > 0) {
