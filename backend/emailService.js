@@ -8,8 +8,8 @@ const fs = require('fs');
 // You MUST generate an "App Password" from your Google Account > Security > 2-Step Verification > App Passwords.
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // use SSL
+    port: 587,
+    secure: false, // use STARTTLS
     auth: {
         user: 'zedcertifications@navabharathtechnologies.com',
         pass: 'nazs czls zfxu urwy' // <--- REPLACE THIS with your 16-char Google App Password (e.g., "xxxx xxxx xxxx xxxx")
