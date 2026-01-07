@@ -12,7 +12,17 @@ const transporter = nodemailer.createTransport({
     secure: false, // use STARTTLS
     auth: {
         user: 'zedcertifications@navabharathtechnologies.com',
-        pass: 'nazs czls zfxu urwy' // <--- REPLACE THIS with your 16-char Google App Password (e.g., "xxxx xxxx xxxx xxxx")
+        pass: 'nazs czls zfxu urwy'
+    },
+    // Fix for Cloud/Render timeouts:
+    tls: {
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    network: {
+        family: 4 // Force IPv4
     }
 });
 
