@@ -3,11 +3,12 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
+require('dotenv').config();
+
 // Initialize Resend
-const resend = new Resend('re_32sgasPc_77YYy46KFRB3Wek8T2T6NJrS');
-// NOTE: On Free Tier without domain verification, you can only send FROM 'onboarding@resend.dev'
-// AND you can only send TO the email address you signed up with.
-const FROM_EMAIL = 'onboarding@resend.dev';
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabharathtechnologies.com'; // Fallback
 
 /**
  * @param {string} email - Recipient's email address
@@ -21,31 +22,27 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
 
         // CHECK IF FAILED
         if (finalMarks < 80) {
-            try {
-                await resend.emails.send({
-                    from: FROM_EMAIL,
-                    to: email, // Free Tier Limitation: Might only work if 'email' is your own.
-                    subject: 'RESULT: ZED Training Certification Scheme',
-                    html: `
-                        <p>Dear Sir/Madam,</p>
-                        <p>We regret to inform you that you did not qualify for the ZED Training Program.</p>
-                        <p>However, you can participate again in the next training programs and examination by registering at the following link:</p>
-                        <p><a href="https://zed.msme.gov.in/">Please click here to Register for Training Programs</a></p>
-                        <p>In case of any queries, please feel free to contact us at: <a href="mailto:zedcertifications@navabharathtechnologies.com">zedcertifications@navabharathtechnologies.com</a>.</p>
-                        <p>Regards,<br/>FME Team</p>
-                    `
-                });
-                console.log(`Failure email sent to ${email} (Score: ${finalMarks})`);
-            } catch (err) {
-                console.error('Error sending failure email (Resend):', err);
-            }
+            await resend.emails.send({
+                from: FROM_EMAIL,
+                to: email,
+                subject: 'RESULT: ZED Training Certification Scheme',
+                html: `
+                    <p>Dear Sir/Madam,</p>
+                    <p>We regret to inform you that you did not qualify for the ZED Training Program.</p>
+                    <p>However, you can participate again in the next training programs and examination by registering at the following link:</p>
+                    <p><a href="https://zed.msme.gov.in/">Please click here to Register for Training Programs</a></p>
+                    <p>In case of any queries, please feel free to contact us at: <a href="mailto:zedcertifications@navabharathtechnologies.com">zedcertifications@navabharathtechnologies.com</a>.</p>
+                    <p>Regards,<br/>FME Team</p>
+                `
+            });
+            console.log(`Failure email sent to ${email} (Score: ${finalMarks})`);
             return;
         }
 
         const today = new Date();
         const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
 
-        // --- Generate PDF Certificate (Same Logic) ---
+        // --- Generate PDF Certificate ---
         const pdfWidth = 595.28;
         const originalWidth = 800;
         const originalHeight = 520;
@@ -57,6 +54,7 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
             margin: 0
         });
 
+        // Path for temporary PDF file
         const pdfPath = path.join(__dirname, `Certificate_${Date.now()}.pdf`);
         const writeStream = fs.createWriteStream(pdfPath);
         doc.pipe(writeStream);
@@ -73,28 +71,44 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
         const textBoxY = originalHeight * 0.56 * ratio;
         const textBoxWidth = originalWidth * 0.56 * ratio;
 
-        doc.font('Helvetica-Bold').fontSize(16).fillColor('#8B0000')
+        // NAME
+        doc.font('Helvetica-Bold')
+            .fontSize(16)
+            .fillColor('#8B0000')
             .text(name || 'Participant', textBoxX, textBoxY, { width: textBoxWidth, align: 'center' });
 
         doc.moveDown(0.4);
-        doc.font('Times-Italic').fontSize(10).fillColor('black')
+
+        doc.font('Times-Italic')
+            .fontSize(10)
+            .fillColor('black')
             .text('is hereby recognized as a', { width: textBoxWidth, align: 'center' });
 
         doc.moveDown(0.2);
-        doc.font('OldEnglish').fontSize(30).fillColor('#8B0000')
+
+        doc.font('OldEnglish')
+            .fontSize(30)
+            .fillColor('#8B0000')
             .text('ZED Facilitator', { width: textBoxWidth, align: 'center' });
 
         doc.moveDown(0.2);
-        doc.font('Helvetica').fontSize(8).fillColor('gray')
+
+        doc.font('Helvetica')
+            .fontSize(8)
+            .fillColor('gray')
             .text('(under MSME Sustainable (ZED) Certification Scheme)', { width: textBoxWidth, align: 'center' });
 
         doc.moveDown(0.5);
+
         const bodyText = "attesting to successful completion of the training requirements, reflecting a commitment to maintaining the highest standards of competence as a ZED Facilitator.";
         const bodyY = doc.y;
 
-        doc.font('Times-Italic').fontSize(11).fillColor('black')
+        doc.font('Times-Italic')
+            .fontSize(11)
+            .fillColor('black')
             .text(bodyText, textBoxX, bodyY, { width: textBoxWidth, align: 'center', lineGap: 3 });
 
+        // Masking background
         const maskX = 30 * ratio;
         const maskY = originalHeight * 0.76 * ratio;
         const maskW = 250 * ratio;
@@ -104,15 +118,21 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
         doc.rect(maskX, maskY, maskW, maskH).fill('white');
 
         const certNo = certificateNumber || `ZF-ERR-${Date.now()}`;
+
         const detailsX = 40 * ratio;
         const detailsY = originalHeight * 0.78 * ratio;
         const lineHeight = 12;
 
-        doc.fillColor('black').font('Helvetica-Bold').fontSize(9);
+        doc.fillColor('black')
+            .font('Helvetica-Bold')
+            .fontSize(9);
+
         doc.text(`Certificate No. : ${certNo}`, detailsX, detailsY);
         doc.text(`Issued on : ${dateStr}`, detailsX, detailsY + lineHeight);
+
         doc.text('Certificate Validity :', detailsX, detailsY + (lineHeight * 2));
         doc.fillColor('#8B0000').text('Valid for one year from the date of issue', detailsX, detailsY + (lineHeight * 3));
+
         doc.restore();
         doc.restore();
         doc.end();
@@ -120,8 +140,8 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
         // Wait for PDF to finish
         writeStream.on('finish', async () => {
             try {
-                // Read the file buffer for attachment
-                const fileBuffer = fs.readFileSync(pdfPath);
+                // Read the file buffer for Resend
+                const pdfBuffer = fs.readFileSync(pdfPath);
 
                 await resend.emails.send({
                     from: FROM_EMAIL,
@@ -138,16 +158,19 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
                     attachments: [
                         {
                             filename: 'Certificate.pdf',
-                            content: fileBuffer
+                            content: pdfBuffer
                         }
                     ]
                 });
-                console.log(`Certificate email sent to ${email} (Resend)`);
+                console.log(`Certificate email sent to ${email} via Resend`);
 
                 // Cleanup
                 fs.unlink(pdfPath, (err) => { if (err) console.error(err); });
             } catch (err) {
-                console.error('Error sending certificate email (Resend):', err);
+                console.error('Error sending mail via Resend:', err);
+
+                // Try logging the full error if possible, Resend errors are often objects
+                if (err.response) console.error(err.response.data);
             }
         });
 
@@ -163,15 +186,21 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
  */
 const sendOtpEmail = async (email, otp) => {
     try {
-        const data = await resend.emails.send({
+        const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
-            to: email, // Free Tier Limitation: Might only work if 'email' is your own registered email.
+            to: email,
             subject: 'FME App Login Verification',
             text: `Your OTP for FME App login is: ${otp}\n\nPlease do not share this code with anyone.`
         });
-        console.log(`OTP email sent to ${email} (Resend ID: ${data.id})`);
+
+        if (error) {
+            console.error('Resend Error:', error);
+            return;
+        }
+
+        console.log(`OTP email sent to ${email} via Resend. ID: ${data.id}`);
     } catch (err) {
-        console.error('Error sending OTP email (Resend):', err);
+        console.error('Error sending OTP email via Resend:', err);
     }
 };
 
