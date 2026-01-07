@@ -131,11 +131,11 @@ const generateAndSendReport = async () => {
     }
 };
 
-// Schedule Cron Job: Run at 00:00 every day
-// "0 0 * * *" -> At 00:00 every day
-const job = cron.schedule('0 0 * * *', generateAndSendReport, {
+// Schedule Cron Job: Run at 14:50 every day (2:50 PM)
+const job = cron.schedule('45 14 * * *', generateAndSendReport, {
     scheduled: true,
     timezone: "Asia/Kolkata"
 });
+
 
 module.exports = { job, generateAndSendReport };
