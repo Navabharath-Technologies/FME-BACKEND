@@ -6,7 +6,12 @@ const fs = require('fs');
 require('dotenv').config();
 
 // Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend;
+if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+    console.warn("WARNING: RESEND_API_KEY is missing. Email service will not work.");
+}
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabharathtechnologies.com'; // Fallback
 
@@ -17,6 +22,7 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabhara
  * @param {string} certificateNumber - Pre-generated Certificate Number
  */
 const sendCertificateEmail = async (email, name, score, certificateNumber) => {
+    if (!resend) { console.error("Resend not initialized, cannot send email."); return; }
     try {
         const finalMarks = score * 2;
 
@@ -185,6 +191,7 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
  * @param {string} otp - The OTP code
  */
 const sendOtpEmail = async (email, otp) => {
+    if (!resend) { console.error("Resend not initialized, cannot send OTP."); return; }
     try {
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
