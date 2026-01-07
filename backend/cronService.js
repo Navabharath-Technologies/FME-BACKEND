@@ -1,3 +1,5 @@
+
+You said:
 const cron = require('node-cron');
 const sql = require('mssql');
 const PDFDocument = require('pdfkit');
@@ -13,12 +15,12 @@ const generateAndSendReport = async () => {
     try {
         pool = await sql.connect(dbConfig);
         // Fetch users who haven't been reported yet
-        const result = await pool.request().query(`
+        const result = await pool.request().query(
             SELECT * FROM FME_logins.users 
             WHERE created_at >= CAST(DATEADD(day, -1, GETDATE()) AS DATE)
             AND created_at < CAST(GETDATE() AS DATE)
             ORDER BY created_at DESC
-        `);
+        );
         const users = result.recordset;
 
         if (users.length === 0) {
@@ -31,14 +33,14 @@ const generateAndSendReport = async () => {
 
         // Create PDF
         const doc = new PDFDocument({ margin: 30 });
-        const filePath = path.join(__dirname, `report_${Date.now()}.pdf`);
+        const filePath = path.join(__dirname, report_${Date.now()}.pdf);
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
         // PDF Header
         doc.fontSize(20).text('FME Application - New User Entries', { align: 'center' });
         doc.moveDown();
-        doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString()} `, { align: 'right' });
+        doc.fontSize(10).text(Generated on: ${new Date().toLocaleString()} , { align: 'right' });
         doc.moveDown();
 
         // Table Header
@@ -94,10 +96,10 @@ const generateAndSendReport = async () => {
                     from: 'FME App <zedcertifications@navabharathtechnologies.com>',
                     to: 'zedcertifications@navabharathtechnologies.com',
                     subject: 'FME App New Entries Report',
-                    text: `Please find attached the PDF report containing ${users.length} new user entries.`,
+                    text: Please find attached the PDF report containing ${users.length} new user entries.,
                     attachments: [
                         {
-                            filename: `User_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+                            filename: User_Report_${new Date().toISOString().split('T')[0]}.pdf,
                             path: filePath
                         }
                     ]
@@ -108,12 +110,12 @@ const generateAndSendReport = async () => {
 
                 // Mark users as reported
                 if (userIds.length > 0) {
-                    await pool.request().query(`
+                    await pool.request().query(
                         UPDATE FME_logins.users 
                         SET is_reported = 1 
                         WHERE id IN(${userIds.join(',')})
-            `);
-                    console.log(`[CRON] Marked ${userIds.length} users as reported.`);
+            );
+                    console.log([CRON] Marked ${userIds.length} users as reported.);
                 }
 
                 // Cleanup: Delete local PDF file
@@ -131,11 +133,11 @@ const generateAndSendReport = async () => {
     }
 };
 
-// Schedule Cron Job: Run at 14:50 every day (2:50 PM)
-const job = cron.schedule('45 14 * * *', generateAndSendReport, {
+// Schedule Cron Job: Run at 00:00 every day
+// "0 0 * * *" -> At 00:00 every day
+const job = cron.schedule('0 0 * * *', generateAndSendReport, {
     scheduled: true,
     timezone: "Asia/Kolkata"
 });
-
 
 module.exports = { job, generateAndSendReport };
