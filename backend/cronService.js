@@ -1,5 +1,3 @@
-
-You said:
 const cron = require('node-cron');
 const sql = require('mssql');
 const PDFDocument = require('pdfkit');
