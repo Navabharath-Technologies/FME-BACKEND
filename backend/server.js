@@ -8,7 +8,7 @@ const dbConfig = require('./dbConfig');
 const { sendCertificateEmail, sendOtpEmail } = require('./emailService');
 const { sendPhoneEmailOtp } = require('./phoneEmailService');
 
-require('./cronService'); // Initialize Cron Job
+const { job, generateAndSendReport } = require('./cronService'); // Initialize Cron Job
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -442,6 +442,20 @@ app.post('/api/submit-result', async (req, res) => {
     } catch (err) {
         console.error('Error updating score:', err);
         res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
+
+// Test Cron Route
+app.get('/api/test-cron', async (req, res) => {
+    try {
+        console.log('[API] Manual cron trigger initiated');
+        // Run the function without awaiting if it takes long, or await if we want to see the result
+        // Since generateAndSendReport is async, let's await it to send a response back
+        await generateAndSendReport();
+        res.status(200).json({ message: 'Report generation triggered successfully. Check logs/email.' });
+    } catch (err) {
+        console.error('[API] Manual cron trigger failed:', err);
+        res.status(500).json({ message: 'Failed to trigger report', error: err.message });
     }
 });
 

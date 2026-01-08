@@ -8,7 +8,7 @@ const dbConfig = require('./dbConfig');
 
 // Function to generate PDF and send email
 const generateAndSendReport = async () => {
-    console.log('[CRON] Starting daily report generation...');
+    console.log(`[CRON] Starting daily report generation at ${new Date().toISOString()}...`);
     let pool;
     try {
         pool = await sql.connect(dbConfig);

@@ -6,7 +6,6 @@ import OtpScreen from './src/screens/OtpScreen';
 import PermissionsScreen from './src/screens/PermissionsScreen';
 import CameraScreen from './src/screens/CameraScreen';
 import ExaminationScreen from './src/screens/ExaminationScreen';
-
 import ProgramDetailsScreen from './src/screens/ProgramDetailsScreen';
 import QuestionsScreen from './src/screens/QuestionsScreen';
 import ReviewScreen from './src/screens/ReviewScreen';
@@ -26,7 +25,6 @@ export default function App() {
           <Stack.Screen name="Permissions" component={PermissionsScreen} />
           <Stack.Screen name="Camera" component={CameraScreen} />
           <Stack.Screen name="Examination" component={ExaminationScreen} />
-          {/* ExamOtp Removed */}
           <Stack.Screen name="ProgramDetails" component={ProgramDetailsScreen} />
           <Stack.Screen name="Questions" component={QuestionsScreen} />
           <Stack.Screen name="Review" component={ReviewScreen} />
