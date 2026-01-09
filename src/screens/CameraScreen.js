@@ -1,49 +1,67 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Button, Platform, StatusBar } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Platform, StatusBar, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
 
 export default function CameraScreen({ route, navigation }) {
-    const { name, email, phone } = route.params || {}; // Safe access
-    const [permission, requestPermission] = useCameraPermissions();
+    const { name, email, phone } = route.params || {};
+    const [permission, requestPermission] = ImagePicker.useCameraPermissions();
     const [scannedImage, setScannedImage] = useState(null);
-    const cameraRef = useRef(null);
+    const isLaunching = useRef(false);
 
-    // Initial check or effect if needed, but the hook handles state.
-
-    // Explicitly request if not determined? 
-    // The hook 'permission' can be null initially.
     useEffect(() => {
-        if (permission && !permission.granted && permission.canAskAgain) {
-            // Optional: Auto request? Better to let user trigger or rely on the hook's initial state if it auto-requests.
-            // Usually we show a view to ask.
+        if (!permission?.granted) {
+            requestPermission();
+        } else if (permission.granted && !scannedImage) {
+            // Auto-launch camera if permission is granted and no image is captured
+            takePicture();
         }
-    }, [permission]);
+    }, [permission, scannedImage]);
 
     const takePicture = async () => {
-        if (cameraRef.current) {
-            try {
-                const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.3 });
-                setScannedImage(photo);
-            } catch (error) {
-                console.error("Take picture error:", error);
-                Alert.alert("Error", "Failed to capture image.");
+        if (isLaunching.current) return; // Prevent double trigger
+        isLaunching.current = true;
+
+        try {
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                allowsEditing: false,
+                quality: 0.5,
+                base64: true,
+                cameraType: ImagePicker.CameraType.front,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                setScannedImage(result.assets[0]);
+            } else {
+                // If cancelled, go back to previous screen
+                navigation.goBack();
             }
+        } catch (error) {
+            console.error("Camera launch error:", error);
+            Alert.alert("Error", "Failed to launch camera.");
+            navigation.goBack();
+        } finally {
+            // Delay resetting flag slightly to avoid rapid re-trigger by generic state updates if any
+            setTimeout(() => {
+                isLaunching.current = false;
+            }, 500);
         }
     };
 
     const retakePicture = () => {
         setScannedImage(null);
+        // Effect will auto-trigger takePicture since scannedImage becomes null
     };
 
     const handleProceed = async () => {
         if (!scannedImage) return;
 
         try {
-            // Resize and compress image
+            // Resize and compress image further if needed, though launchCameraAsync quality handles some
             const manipulatedImage = await ImageManipulator.manipulateAsync(
                 scannedImage.uri,
                 [{ resize: { width: 600 } }],
@@ -61,7 +79,6 @@ export default function CameraScreen({ route, navigation }) {
 
             const data = await response.json();
             if (response.ok && data.success) {
-                // Navigate to next screen or Home
                 navigation.reset({
                     index: 0,
                     routes: [{ name: 'Examination', params: { name, email, phone } }],
@@ -75,52 +92,44 @@ export default function CameraScreen({ route, navigation }) {
         }
     };
 
-    useEffect(() => {
-        if (!permission?.granted) {
-            requestPermission();
-        }
-    }, [permission]);
-
-    if (!permission || !permission.granted) {
+    if (!permission) {
         return <View style={globalStyles.container} />;
+    }
+
+    if (!permission.granted) {
+        return (
+            <View style={[globalStyles.container, styles.centerMsg]}>
+                <Text style={styles.title}>Camera Permission Required</Text>
+                <Text style={styles.subtitle}>We need access to your camera to verify your identity.</Text>
+                <TouchableOpacity style={[globalStyles.btnPrimary, { marginTop: 20 }]} onPress={requestPermission}>
+                    <Text style={globalStyles.btnText}>Grant Permission</Text>
+                </TouchableOpacity>
+            </View>
+        );
     }
 
     return (
         <SafeAreaView style={[globalStyles.container, { padding: 0, alignItems: 'center', backgroundColor: '#fff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Photo Verification</Text>
-                <Text style={styles.subtitle}>Please capture your photo to proceed</Text>
-            </View>
 
-            <View style={styles.cameraContainer}>
+
+            <View style={styles.contentContainer}>
                 {scannedImage ? (
-                    <Image source={{ uri: scannedImage.uri }} style={styles.camera} />
-                ) : (
-                    <View style={styles.cameraWrapper}>
-                        <CameraView
-                            style={styles.camera}
-                            facing="front"
-                            ref={cameraRef}
-                        />
-                        <View style={styles.overlay} />
+                    <View style={styles.previewContainer}>
+                        <Image source={{ uri: scannedImage.uri }} style={styles.previewImage} />
                     </View>
+                ) : (
+                    <ActivityIndicator size="large" color="#1a7161" />
                 )}
             </View>
 
-            <Text style={styles.instruction}>Ensure your face is clearly visible within the frame.</Text>
-
             <View style={styles.controls}>
-                {!scannedImage ? (
-                    <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
-                        <View style={styles.captureInner} />
-                    </TouchableOpacity>
-                ) : (
-                    <View style={styles.actionButtons}>
-                        <TouchableOpacity style={[globalStyles.btnPrimary, { backgroundColor: '#888', marginBottom: 10 }]} onPress={retakePicture}>
-                            <Text style={globalStyles.btnText}>RETAKE</Text>
+                {scannedImage && (
+                    <View style={styles.actionButtonsContainer}>
+                        <TouchableOpacity style={styles.actionBtn} onPress={retakePicture}>
+                            <Text style={styles.actionBtnText}>TAKE SELFIE</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={globalStyles.btnPrimary} onPress={handleProceed}>
-                            <Text style={globalStyles.btnText}>PROCEED</Text>
+                        <TouchableOpacity style={styles.actionBtn} onPress={handleProceed}>
+                            <Text style={styles.actionBtnText}>SUBMIT SELFIE</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -130,75 +139,70 @@ export default function CameraScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    header: {
-        marginBottom: 20,
+    contentContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
+        width: '100%',
+        backgroundColor: '#fff',
     },
-    title: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1a7161',
-    },
-    subtitle: {
-        fontSize: 12,
-        color: '#666',
-    },
-    cameraContainer: {
-        width: 250,
-        height: 330,
-        borderRadius: 20,
-        overflow: 'hidden',
-        borderWidth: 4,
-        borderColor: '#1a7161',
+    previewContainer: {
+        width: 300,
+        height: 300,
         marginBottom: 20,
-        position: 'relative',
-        backgroundColor: '#000',
+        backgroundColor: '#f0f0f0',
+        elevation: 5, // Android shadow
+        shadowColor: '#000', // iOS shadow
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
     },
-    cameraWrapper: {
-        flex: 1,
-    },
-    camera: {
-        flex: 1,
-    },
-    overlay: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        width: 200,
-        height: 250,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.5)',
-        borderRadius: 100, // Oval
-        borderStyle: 'dashed',
-        transform: [{ translateX: -100 }, { translateY: -125 }],
-    },
-    instruction: {
-        fontSize: 13,
-        color: '#555',
-        marginBottom: 40,
+    previewImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'contain', // Or 'cover' depending on preference, 'contain' keeps aspect ratio visible
     },
     controls: {
         width: '100%',
         alignItems: 'center',
-        paddingHorizontal: 40,
+        paddingBottom: 40,
+        paddingHorizontal: 20,
     },
-    captureBtn: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        backgroundColor: '#fff',
-        borderWidth: 5,
-        borderColor: '#1a7161',
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        gap: 20, // Requires newer RN, fallback with margin if fails? Expo 54 should support gap.
+    },
+    actionBtn: {
+        flex: 1,
+        backgroundColor: '#00695c', // Darker green like screenshot
+        paddingVertical: 12,
+        borderRadius: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: 5,
+    },
+    actionBtnText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
+    centerMsg: {
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20
     },
-    captureInner: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: '#1a7161',
+    title: { // Keeping these for permission view usage
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
     },
-    actionButtons: {
-        width: '100%',
+    subtitle: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 20,
+        textAlign: 'center',
     }
 });

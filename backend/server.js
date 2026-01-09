@@ -23,6 +23,9 @@ app.use((req, res, next) => {
     next();
 });
 
+// Serve Static Files (e.g., PDFs)
+app.use('/public', express.static('public'));
+
 // API Endpoint to upload photo
 app.post('/api/upload-photo', async (req, res) => {
     try {

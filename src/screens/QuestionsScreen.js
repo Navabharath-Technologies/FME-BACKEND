@@ -48,17 +48,13 @@ export default function QuestionsScreen({ navigation, route }) {
     const scrollViewRef = React.useRef(null);
 
     const handleNextPage = () => {
-        // Validate that all questions on the current page are answered
-        const startIndex = page * QUESTIONS_PER_PAGE;
-        const currentPageQuestions = questions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
-        const allAnswered = currentPageQuestions.every(q => answers[q.id]);
-
-        if (!allAnswered) {
-            Alert.alert('Incomplete', 'Please answer all questions on this page before proceeding.');
-            return;
-        }
-
         const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
+        if (page < totalPages - 1) {
+            setPage(page + 1);
+            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+        } else {
+            handleSubmit();
+        }
         if (page < totalPages - 1) {
             setPage(page + 1);
             scrollViewRef.current?.scrollTo({ y: 0, animated: true });

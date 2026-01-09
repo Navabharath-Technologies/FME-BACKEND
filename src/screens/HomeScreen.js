@@ -123,7 +123,14 @@ export default function HomeScreen({ navigation }) {
                             style={[globalStyles.input, nameError ? { borderColor: 'red', borderWidth: 1 } : null]}
                             placeholder="Full Name"
                             value={name}
-                            onChangeText={(text) => { setName(text); setNameError(''); }}
+                            onChangeText={(text) => {
+                                setName(text);
+                                if (text && !/^[a-zA-Z\s]*$/.test(text)) {
+                                    setNameError('Name should not contain special characters.');
+                                } else {
+                                    setNameError('');
+                                }
+                            }}
                             returnKeyType="next"
                             onSubmitEditing={() => emailRef.current?.focus()}
                             blurOnSubmit={false}
@@ -155,7 +162,16 @@ export default function HomeScreen({ navigation }) {
                             style={[globalStyles.input, phoneError ? { borderColor: 'red', borderWidth: 1 } : null]}
                             placeholder="Mobile Number"
                             value={phone}
-                            onChangeText={(text) => { setPhone(text); setPhoneError(''); }}
+                            onChangeText={(text) => {
+                                setPhone(text);
+                                if (text && !/^\d*$/.test(text)) {
+                                    setPhoneError('Phone number should only contain digits.');
+                                } else if (text.length > 10) {
+                                    setPhoneError('Phone number cannot exceed 10 digits.');
+                                } else {
+                                    setPhoneError('');
+                                }
+                            }}
                             keyboardType="phone-pad"
                             returnKeyType="done"
                             onSubmitEditing={handleSubmit}

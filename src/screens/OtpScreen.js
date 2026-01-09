@@ -32,14 +32,23 @@ export default function OtpScreen({ route, navigation }) {
         setResendEnabled(false);
         setTimer(60);
         try {
-            await fetch(`${API_URL}/api/login`, {
+            console.log('Resending OTP to:', email);
+            const response = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, phone: '0000000000', otpChannel: 'email' }) // Use phone if needed, but email is primary here
+                body: JSON.stringify({ name, email, phone, otpChannel: 'email' })
             });
-            Alert.alert('Success', 'OTP has been resent to your email.');
+
+            const data = await response.json();
+
+            if (response.ok) {
+                Alert.alert('Success', 'OTP has been resent to your email.');
+            } else {
+                throw new Error(data.message || 'Failed to resend OTP');
+            }
         } catch (error) {
-            Alert.alert('Error', 'Failed to resend OTP.');
+            console.error("Resend Error:", error);
+            Alert.alert('Error', 'Failed to resend OTP. Please try again.');
             setResendEnabled(true);
             setTimer(0);
         }

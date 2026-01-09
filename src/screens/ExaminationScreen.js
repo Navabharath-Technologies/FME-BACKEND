@@ -96,6 +96,7 @@ export default function ExaminationScreen({ route, navigation }) {
                         <Text style={localStyles.nextButtonText}>Next &gt;&gt;</Text>
                     </TouchableOpacity>
 
+
                 </View>
             </ScrollView >
 

@@ -56,7 +56,21 @@ export default function ProgramDetailsScreen({ route, navigation }) {
                         </View>
 
                     </View>
-
+                    {/* Link to Access PDF */}
+                    <TouchableOpacity
+                        style={{ marginTop: 20, alignItems: 'center' }}
+                        onPress={() => {
+                            const pdfUrl = `${API_URL}/public/sample_paper.pdf`;
+                            Linking.openURL(pdfUrl).catch(err => {
+                                console.error('Failed to open PDF:', err);
+                                Alert.alert('Error', 'Could not open the PDF.');
+                            });
+                        }}
+                    >
+                        <Text style={{ color: '#1a7161', textDecorationLine: 'underline', fontWeight: 'bold' }}>
+                            Reference (PDF)
+                        </Text>
+                    </TouchableOpacity>
                     {/* Next Button */}
                     <TouchableOpacity style={localStyles.nextButton} onPress={() => navigation.navigate('Questions', { name, email, phone, programId })}>
                         <Text style={localStyles.nextButtonText}>Next &gt;&gt;</Text>
