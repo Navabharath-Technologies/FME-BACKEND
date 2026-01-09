@@ -38,6 +38,7 @@ const sendCertificateEmail = async (email, name, score, certificateNumber) => {
                     <p>However, you can participate again in the next training programs and examination by registering at the following link:</p>
                     <p><a href="https://zed.msme.gov.in/">Please click here to Register for Training Programs</a></p>
                     <p>In case of any queries, please feel free to contact us at: <a href="mailto:zedcertifications@navabharathtechnologies.com">zedcertifications@navabharathtechnologies.com</a>.</p>
+                    <p>For your future reference, please refer this <a href="https://fme-3.onrender.com/public/sample_paper.pdf">Sample PDF</a>.</p>
                     <p>Regards,<br/>FME Team</p>
                 `
             });
