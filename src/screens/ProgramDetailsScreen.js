@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
 
+// Force refresh
 import FloatingHelpButton from '../components/FloatingHelpButton';
 
 export default function ProgramDetailsScreen({ route, navigation }) {
@@ -61,7 +62,7 @@ export default function ProgramDetailsScreen({ route, navigation }) {
                     <TouchableOpacity
                         style={{ marginTop: 20, alignItems: 'center' }}
                         onPress={() => {
-                            const pdfUrl = `${API_URL}/public/sample_paper.pdf`;
+                            const pdfUrl = `${API_URL}/public/Study_Material.pdf`;
                             Linking.openURL(pdfUrl).catch(err => {
                                 console.error('Failed to open PDF:', err);
                                 Alert.alert('Error', 'Could not open the PDF.');
