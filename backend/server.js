@@ -3,10 +3,6 @@ const express = require('express');
 const sql = require('mssql');
 const path = require('path');
 
-// ... (other imports)
-
-// Use absolute path to ensure it works regardless of CWD (Current Working Directory)
-app.use('/public', express.static(path.join(__dirname, 'public')));
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const questionsData = require('./questions_data');
