@@ -103,9 +103,12 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
                     doc.restore();
                     doc.fillColor('black');
 
-                    // Advance Y (Estimate height)
-                    const height = doc.heightOfString(`${i + 1}. ${q.question_text || q.question}`, { width: 300 });
-                    y += height + 10;
+                    // Advance Y (Calculate max height to prevent overlap)
+                    const questionHeight = doc.heightOfString(`${i + 1}. ${q.question_text || q.question}`, { width: 300 });
+                    const answerHeight = doc.heightOfString(userText, { width: 90 });
+                    const rowHeight = Math.max(questionHeight, answerHeight);
+
+                    y += rowHeight + 15; // increased padding for safety
                 });
             }
 
