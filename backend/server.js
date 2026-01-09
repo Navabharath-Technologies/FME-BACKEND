@@ -420,7 +420,7 @@ app.get('/api/questions', async (req, res) => {
 // API Endpoint to store exam result
 app.post('/api/submit-result', async (req, res) => {
     try {
-        const { email, score, name } = req.body;
+        const { email, score, name, questions, userAnswers } = req.body;
 
         if (!email || score === undefined) {
             return res.status(400).json({ message: 'Email and Score are required' });
@@ -455,11 +455,14 @@ app.post('/api/submit-result', async (req, res) => {
 
         console.log(`Score updated for ${email}: ${score}. Cert: ${certNo}`);
 
-        // Send Certificate Email
-        // We pass certNo (it might be null if failed, emailService handles failure check mainly by score, but good to be consistent)
-        await sendCertificateEmail(email, name, score, certNo);
+        // Send Certificate Email (Pass questions/answers for failure report)
+        await sendCertificateEmail(email, name, score, certNo, questions, userAnswers);
 
-        res.status(200).json({ message: 'Score updated and certificate generated', success: true });
+        if (certNo) {
+            res.status(200).json({ message: 'Score updated and certificate generated', success: true });
+        } else {
+            res.status(200).json({ message: 'Score updated. User did not qualify.', success: true });
+        }
 
     } catch (err) {
         console.error('Error updating score:', err);
