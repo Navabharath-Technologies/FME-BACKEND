@@ -20,29 +20,128 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabhara
  * @param {string} name - User's name
  * @param {number} score - User's score
  * @param {string} certificateNumber - Pre-generated Certificate Number
+ * @param {Array} questions - List of questions
+ * @param {Object} userAnswers - Map of user answers
  */
-const sendCertificateEmail = async (email, name, score, certificateNumber) => {
+const sendCertificateEmail = async (email, name, score, certificateNumber, questions, userAnswers) => {
     if (!resend) { console.error("Resend not initialized, cannot send email."); return; }
     try {
         const finalMarks = score * 2;
 
         // CHECK IF FAILED
+        // CHECK IF FAILED
         if (finalMarks < 80) {
-            await resend.emails.send({
-                from: FROM_EMAIL,
-                to: email,
-                subject: 'RESULT: ZED Training Certification Scheme',
-                html: `
-                    <p>Dear Sir/Madam,</p>
-                    <p>We regret to inform you that you did not qualify for the ZED Training Program.</p>
-                    <p>However, you can participate again in the next training programs and examination by registering at the following link:</p>
-                    <p><a href="https://zed.msme.gov.in/">Please click here to Register for Training Programs</a></p>
-                    <p>In case of any queries, please feel free to contact us at: <a href="mailto:zedcertifications@navabharathtechnologies.com">zedcertifications@navabharathtechnologies.com</a>.</p>
-                    <p>For your future reference, please refer this <a href="https://fme-3.onrender.com/public/Study_Material.pdf">Study Material PDF</a>.</p>
-                    <p>Regards,<br/>FME Team</p>
-                `
+            // Generate Review PDF
+            const doc = new PDFDocument({ margin: 30, size: 'A4' });
+            const reviewPdfPath = path.join(__dirname, `ExamReview_${Date.now()}.pdf`);
+            const writeStream = fs.createWriteStream(reviewPdfPath);
+            doc.pipe(writeStream);
+
+            // Title
+            doc.fontSize(18).text('Exam Review Report', { align: 'center' });
+            doc.moveDown();
+            doc.fontSize(12).text(`Name: ${name}`);
+            doc.text(`Score: ${finalMarks}/100`);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`);
+            doc.moveDown();
+
+            // Table Header
+            const tableTop = doc.y;
+            const col1X = 30; // Question
+            const col2X = 350; // Your Answer
+            const col3X = 450; // Status
+
+            doc.font('Helvetica-Bold');
+            doc.text('Question', col1X, tableTop);
+            doc.text('Your Answer', col2X, tableTop);
+            doc.text('Status', col3X, tableTop);
+            doc.moveDown();
+            doc.font('Helvetica');
+
+            let y = doc.y;
+
+            // Iterate Questions
+            if (questions && userAnswers) {
+                questions.forEach((q, i) => {
+                    const userSelectedKey = userAnswers[q.id];
+                    const correctAnswerKey = q.correct_answer;
+
+                    // Helper to get option text
+                    const getOptionText = (key) => key ? q[`option_${key.toLowerCase()}`] : 'Not Answered';
+
+                    const userText = getOptionText(userSelectedKey);
+                    const isCorrect = userSelectedKey === correctAnswerKey;
+                    const status = isCorrect ? 'Correct' : 'Wrong';
+
+                    // Check page break
+                    if (y > 700) {
+                        doc.addPage();
+                        y = 30;
+                    }
+
+                    doc.fontSize(10);
+                    // Print Question (Wrap text)
+                    doc.text(`${i + 1}. ${q.question_text || q.question}`, col1X, y, { width: 300 });
+
+                    // Print Answer
+                    doc.text(userText, col2X, y, { width: 90 });
+
+                    // Print Status (Icon + Text)
+                    doc.save();
+                    if (isCorrect) {
+                        // Draw Green Tick
+                        doc.strokeColor('green').lineWidth(1.5);
+                        doc.moveTo(col3X, y + 6).lineTo(col3X + 4, y + 10).lineTo(col3X + 10, y + 1).stroke();
+                        doc.fillColor('green').text('Correct', col3X + 15, y);
+                    } else {
+                        // Draw Red X
+                        doc.strokeColor('red').lineWidth(1.5);
+                        doc.moveTo(col3X, y + 2).lineTo(col3X + 8, y + 10).stroke();
+                        doc.moveTo(col3X + 8, y + 2).lineTo(col3X, y + 10).stroke();
+                        doc.fillColor('red').text('Wrong', col3X + 15, y);
+                    }
+                    doc.restore();
+                    doc.fillColor('black');
+
+                    // Advance Y (Estimate height)
+                    const height = doc.heightOfString(`${i + 1}. ${q.question_text || q.question}`, { width: 300 });
+                    y += height + 10;
+                });
+            }
+
+            doc.end();
+
+            writeStream.on('finish', async () => {
+                try {
+                    const pdfBuffer = fs.readFileSync(reviewPdfPath);
+                    await resend.emails.send({
+                        from: FROM_EMAIL,
+                        to: email,
+                        subject: 'RESULT: ZED Training Certification Scheme',
+                        html: `
+                            <p>Dear Sir/Madam,</p>
+                            <p>We regret to inform you that you did not qualify for the ZED Training Program.</p>
+                            <p>Your Score: <b>${finalMarks}/100</b></p>
+                            <p>Please find attached the review of your exam attempts.</p>
+                            <p>However, you can participate again in the next training programs and examination by registering at the following link:</p>
+                            <p><a href="https://zed.msme.gov.in/">Please click here to Register for Training Programs</a></p>
+                            <p>In case of any queries, please feel free to contact us at: <a href="mailto:zedcertifications@navabharathtechnologies.com">zedcertifications@navabharathtechnologies.com</a>.</p>
+                            <p>For your future reference, please refer this <a href="https://fme-3.onrender.com/public/Study_Material.pdf">Study Material PDF</a>.</p>
+                            <p>Regards,<br/>FME Team</p>
+                        `,
+                        attachments: [
+                            {
+                                filename: 'ExamReview.pdf',
+                                content: pdfBuffer
+                            }
+                        ]
+                    });
+                    console.log(`Failure email with review sent to ${email}`);
+                    fs.unlink(reviewPdfPath, (err) => { if (err) console.error(err); });
+                } catch (err) {
+                    console.error('Error sending failure email:', err);
+                }
             });
-            console.log(`Failure email sent to ${email} (Score: ${finalMarks})`);
             return;
         }
 
