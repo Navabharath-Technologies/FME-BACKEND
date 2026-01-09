@@ -194,6 +194,18 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ message: 'Name, Email and Phone are required' });
         }
 
+        // Validate Name (Only Alphabets and Spaces)
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        if (!nameRegex.test(name)) {
+            return res.status(400).json({ message: 'Name should not contain special characters' });
+        }
+
+        // Validate Phone (Only Digits)
+        const phoneRegex = /^\d+$/;
+        if (!phoneRegex.test(phone)) {
+            return res.status(400).json({ message: 'Phone number should not contain special characters' });
+        }
+
         const pool = await sql.connect(dbConfig);
 
         // Check for exact match (Email AND Phone)
@@ -279,6 +291,11 @@ app.post('/auth/send-otp', async (req, res) => {
     try {
         const { phone } = req.body;
         if (!phone) return res.status(400).json({ message: 'Phone number required' });
+
+        // Validate Phone (Only Digits)
+        if (!/^\d+$/.test(phone)) {
+            return res.status(400).json({ message: 'Phone number should not contain special characters' });
+        }
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
