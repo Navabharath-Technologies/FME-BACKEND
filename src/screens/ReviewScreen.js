@@ -32,7 +32,7 @@ export default function ReviewScreen({ route, navigation }) {
             await fetch(`${API_URL}/api/submit-result`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, score, name })
+                body: JSON.stringify({ email, score, name, questions, userAnswers })
             });
         } catch (error) {
             console.error('Failed to save score:', error);

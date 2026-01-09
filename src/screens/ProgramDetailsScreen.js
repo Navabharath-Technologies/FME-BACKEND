@@ -70,7 +70,7 @@ export default function ProgramDetailsScreen({ route, navigation }) {
                         }}
                     >
                         <Text style={{ color: '#1a7161', textDecorationLine: 'underline', fontWeight: 'bold' }}>
-                            Reference (PDF)
+                            Study_Material (PDF)
                         </Text>
                     </TouchableOpacity>
                     {/* Next Button */}

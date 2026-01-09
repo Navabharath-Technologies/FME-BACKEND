@@ -12,11 +12,38 @@ const generateAndSendReport = async () => {
     let pool;
     try {
         pool = await sql.connect(dbConfig);
+
+        // Calculate 'Yesterday' and 'Today' based on IST Timezone
+        // We want the report for the previous full day (00:00 to 23:59)
+        const now = new Date();
+
+        // Get IST time string
+        const istOptions = { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' };
+
+        // Setup "Yesterday"
+        const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Subtract 24 hours
+        // Format to YYYY-MM-DD using IST
+        // Note: Intl.DateTimeFormat parts can be tricky, let's use a simpler approach if environment allows, 
+        // but robust way is getting parts.
+        // Actually, since we are moving the execution time to 6 AM, 'now' is Today 6 AM.
+        // So 'Yesterday' is strictly Date - 1 Day.
+
+        // Helper to format date as YYYY-MM-DD in IST
+        const getISTDateString = (dateObj) => {
+            return dateObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // en-CA gives YYYY-MM-DD
+        };
+
+        const todayIST = getISTDateString(now); // e.g., "2026-01-10"
+        const yesterdayIST = getISTDateString(yesterdayDate); // e.g., "2026-01-09"
+
+        console.log(`[CRON] Fetching report for Date Range: ${yesterdayIST} 00:00:00 to ${todayIST} 00:00:00 (IST)`);
+
         // Fetch users who haven't been reported yet
+        // Using string literals for dates ensures server timezone settings don't shift the window
         const result = await pool.request().query(`
             SELECT * FROM FME_logins.users 
-            WHERE created_at >= CAST(DATEADD(day, -1, GETDATE()) AS DATE)
-            AND created_at < CAST(GETDATE() AS DATE)
+            WHERE created_at >= CAST('${yesterdayIST}' AS DATE)
+            AND created_at < CAST('${todayIST}' AS DATE)
             ORDER BY created_at DESC
         `);
         const users = result.recordset;
@@ -142,9 +169,9 @@ const generateAndSendReport = async () => {
     }
 };
 
-// Schedule Cron Job: Run at 00:00 every day
-// "0 0 * * *" -> At 00:00 every day
-const job = cron.schedule('0 0 * * *', generateAndSendReport, {
+// Schedule Cron Job: Run at 06:00 AM every day
+// "0 6 * * *" -> At 06:00 AM every day
+const job = cron.schedule('0 6 * * *', generateAndSendReport, {
     scheduled: true,
     timezone: "Asia/Kolkata"
 });

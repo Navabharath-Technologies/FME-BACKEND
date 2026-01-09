@@ -21,6 +21,57 @@ export default function HomeScreen({ navigation }) {
     const emailRef = React.useRef(null);
     const phoneRef = React.useRef(null);
 
+    const validatePhone = (num) => {
+        // 1. Must start with 6,7,8,9
+        if (!/^[6-9]/.test(num)) return "please enter valid phone number.";
+
+        // 2. Must be digits only (already checked in regex, but safe to keep)
+        if (!/^\d+$/.test(num)) return "Phone number should only contain digits.";
+
+        // 3. Length check
+        if (num.length > 10) return "Phone number cannot exceed 10 digits.";
+        if (num.length === 10) {
+            // 4. No continuous ascending (e.g., 123456) or descending (e.g., 654321) of more than 5 digits ? 
+            // User asked: "not be in continues numbers like accending or descending"
+            // Let's check for the whole string or significant chunks.
+            // A simple way is to check if "0123456789" includes the substring or reversed.
+
+            const ascending = "0123456789";
+            const descending = "9876543210";
+
+            // Allow small sequences? User said "continues numbers", usually implies the whole or large part.
+            // Let's allow max 5 sequential digits. If 6 or more, reject.
+            // Actually, for 10 digits, "1234567890" is the main catch.
+            if (ascending.includes(num)) return "Invalid phone number sequence.";
+            if (descending.includes(num)) return "Invalid phone number sequence.";
+
+            // 5. Repeated digits (Dummy) e.g., 8888888888
+            if (/^(\d)\1+$/.test(num)) return "Invalid phone number (repeated digits).";
+
+            // 6. High frequency of a single digit (e.g., 9000000000, 8881888888)
+            const digitCounts = {};
+            for (let char of num) {
+                digitCounts[char] = (digitCounts[char] || 0) + 1;
+            }
+            if (Object.values(digitCounts).some(count => count > 7)) {
+                return "Invalid phone number (too many similar digits).";
+            }
+
+            // 7. Repeating patterns (e.g., 9898989898, 6786786786, 9876598765)
+            // Check patterns of length 2, 3, 4, 5
+            for (let len = 2; len <= 5; len++) {
+                const pattern = num.substring(0, len);
+                // Create a string by repeating the pattern enough times to reach length 10
+                const repeated = pattern.repeat(Math.ceil(10 / len)).slice(0, 10);
+                if (repeated === num) {
+                    return "Invalid phone number (repeating pattern).";
+                }
+            }
+        }
+
+        return "";
+    };
+
     const handleSubmit = async () => {
         let valid = true;
 
@@ -37,17 +88,23 @@ export default function HomeScreen({ navigation }) {
         if (!email) {
             setEmailError('Email is required.');
             valid = false;
-        } else if (!email.toLowerCase().endsWith('@gmail.com')) {
-            setEmailError('Please enter a valid Gmail address.');
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setEmailError('Please enter a valid email address.');
             valid = false;
         }
 
         if (!phone) {
             setPhoneError('Mobile Number is required.');
             valid = false;
-        } else if (!/^\d{10}$/.test(phone)) {
+        } else if (phone.length !== 10) {
             setPhoneError('Please enter a valid 10-digit mobile number.');
             valid = false;
+        } else {
+            const phoneValError = validatePhone(phone);
+            if (phoneValError) {
+                setPhoneError(phoneValError);
+                valid = false;
+            }
         }
 
         if (!valid) return;
@@ -145,7 +202,12 @@ export default function HomeScreen({ navigation }) {
                             style={[globalStyles.input, emailError ? { borderColor: 'red', borderWidth: 1 } : null]}
                             placeholder="Email Address"
                             value={email}
-                            onChangeText={(text) => { setEmail(text); setEmailError(''); }}
+                            onChangeText={(text) => {
+                                // Allow only a-z, 0-9, @, .
+                                const cleaned = text.replace(/[^a-zA-Z0-9@.]/g, '').toLowerCase();
+                                setEmail(cleaned);
+                                setEmailError('');
+                            }}
                             keyboardType="email-address"
                             autoCapitalize="none"
                             returnKeyType="next"
@@ -164,13 +226,8 @@ export default function HomeScreen({ navigation }) {
                             value={phone}
                             onChangeText={(text) => {
                                 setPhone(text);
-                                if (text && !/^\d*$/.test(text)) {
-                                    setPhoneError('Phone number should only contain digits.');
-                                } else if (text.length > 10) {
-                                    setPhoneError('Phone number cannot exceed 10 digits.');
-                                } else {
-                                    setPhoneError('');
-                                }
+                                const errorMsg = validatePhone(text);
+                                setPhoneError(errorMsg);
                             }}
                             keyboardType="phone-pad"
                             returnKeyType="done"

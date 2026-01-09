@@ -61,7 +61,10 @@ export default function ExaminationScreen({ route, navigation }) {
                         <TextInput
                             style={localStyles.input}
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={(text) => {
+                                const cleaned = text.replace(/[^a-zA-Z0-9@.]/g, '').toLowerCase();
+                                setEmail(cleaned);
+                            }}
                             placeholder="Enter Email ID"
                             keyboardType="email-address"
                             autoCapitalize="none"
