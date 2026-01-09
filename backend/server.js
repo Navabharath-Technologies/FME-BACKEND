@@ -1,6 +1,9 @@
-require('dotenv').config();
-const express = require('express');
-const sql = require('mssql');
+const path = require('path');
+
+// ... (other imports)
+
+// Use absolute path to ensure it works regardless of CWD (Current Working Directory)
+app.use('/public', express.static(path.join(__dirname, 'public')));
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const questionsData = require('./questions_data');
@@ -23,8 +26,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve Static Files (e.g., PDFs)
-app.use('/public', express.static('public'));
+// Serve Static Files (e.g., PDFs) using absolute path
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // API Endpoint to upload photo
 app.post('/api/upload-photo', async (req, res) => {
