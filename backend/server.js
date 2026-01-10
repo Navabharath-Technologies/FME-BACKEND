@@ -10,7 +10,7 @@ const dbConfig = require('./dbConfig');
 const { sendCertificateEmail, sendOtpEmail } = require('./emailService');
 const { sendPhoneEmailOtp } = require('./phoneEmailService');
 
-const { job, generateAndSendReport } = require('./cronService'); // Initialize Cron Job
+const { job, generateAndSendReport, checkMissedReport } = require('./cronService'); // Initialize Cron Job
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -485,5 +485,7 @@ app.get('/api/test-cron', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on port ${port}`);
+    // Check for missed reports on startup
+    checkMissedReport();
 });

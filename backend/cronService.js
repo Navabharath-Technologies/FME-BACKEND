@@ -44,6 +44,7 @@ const generateAndSendReport = async () => {
             SELECT * FROM FME_logins.users 
             WHERE created_at >= CAST('${yesterdayIST}' AS DATE)
             AND created_at < CAST('${todayIST}' AS DATE)
+            AND (is_reported = 0 OR is_reported IS NULL)
             ORDER BY created_at DESC
         `);
         const users = result.recordset;
@@ -176,4 +177,29 @@ const job = cron.schedule('0 6 * * *', generateAndSendReport, {
     timezone: "Asia/Kolkata"
 });
 
-module.exports = { job, generateAndSendReport };
+// Check for missed reports on startup (e.g. if server was sleeping at 6 AM)
+const checkMissedReport = async () => {
+    try {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Kolkata',
+            hour: 'numeric',
+            hour12: false
+        });
+        const hour = parseInt(formatter.format(now));
+
+        console.log(`[Startup Check] Current IST Hour: ${hour}`);
+
+        // Only run retry logic if it is 06:00 AM or later
+        if (hour >= 6) {
+            console.log('[Startup Check] Time is past 6 AM IST. Checking for pending reports...');
+            await generateAndSendReport();
+        } else {
+            console.log('[Startup Check] Too early (before 6 AM IST). No report checks needed.');
+        }
+    } catch (err) {
+        console.error('[Startup Check] Failed:', err);
+    }
+};
+
+module.exports = { job, generateAndSendReport, checkMissedReport };
