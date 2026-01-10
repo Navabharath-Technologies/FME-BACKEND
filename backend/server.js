@@ -25,14 +25,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// API to get Study Material URL (Dynamic)
-app.get('/api/get-study-material-url', (req, res) => {
-    const studyMaterialUrl = process.env.STUDY_MATERIAL_URL || 'https://drive.google.com/drive/folders/1m9Lqd4yC0V3f_C_3YEmG_yMk6fmOA0zj?usp=sharing';
-    res.json({ url: studyMaterialUrl });
-});
-
+// Redirect Study Material to Google Drive
 // Serve Static Files (e.g., PDFs) using absolute path
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.pdf')) {
+            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('Content-Type', 'application/pdf');
+        }
+    }
+}));
 
 // API Endpoint to upload photo
 app.post('/api/upload-photo', async (req, res) => {
