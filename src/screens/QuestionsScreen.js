@@ -11,7 +11,8 @@ import LogoLoader from '../components/LogoLoader';
 let savedSession = {
     userEmail: null,
     answers: {},
-    page: 0
+    page: 0,
+    questions: []
 };
 
 export default function QuestionsScreen({ navigation, route }) {
@@ -27,24 +28,28 @@ export default function QuestionsScreen({ navigation, route }) {
 
     // Restore session on mount
     useEffect(() => {
-        if (savedSession.userEmail === email) {
-            console.log('Restoring previous session for:', email);
+        if (savedSession.userEmail === email && savedSession.questions.length > 0) {
+            console.log('Restoring previous session and questions for:', email);
             setAnswers(savedSession.answers);
             setPage(savedSession.page);
+            setQuestions(savedSession.questions);
+            setLoading(false);
+        } else {
+            fetchQuestions();
         }
-        fetchQuestions();
     }, []);
 
     // Save session on updates
     useEffect(() => {
-        if (email) {
+        if (email && questions.length > 0) {
             savedSession = {
                 userEmail: email,
                 answers: answers,
-                page: page
+                page: page,
+                questions: questions
             };
         }
-    }, [answers, page, email]);
+    }, [answers, page, email, questions]);
 
     const fetchQuestions = async () => {
         try {
