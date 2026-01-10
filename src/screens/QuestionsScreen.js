@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image, Modal, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image, Modal, Platform, StatusBar, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
 
 import LogoLoader from '../components/LogoLoader';
+
+
+// In-memory session storage to persist state on accidental back navigation
+let savedSession = {
+    userEmail: null,
+    answers: {},
+    page: 0
+};
 
 export default function QuestionsScreen({ navigation, route }) {
     const { name, email, phone, programId } = route.params || {};
@@ -17,9 +25,26 @@ export default function QuestionsScreen({ navigation, route }) {
     const [loading, setLoading] = useState(true);
     const [submitModalVisible, setSubmitModalVisible] = useState(false);
 
+    // Restore session on mount
     useEffect(() => {
+        if (savedSession.userEmail === email) {
+            console.log('Restoring previous session for:', email);
+            setAnswers(savedSession.answers);
+            setPage(savedSession.page);
+        }
         fetchQuestions();
     }, []);
+
+    // Save session on updates
+    useEffect(() => {
+        if (email) {
+            savedSession = {
+                userEmail: email,
+                answers: answers,
+                page: page
+            };
+        }
+    }, [answers, page, email]);
 
     const fetchQuestions = async () => {
         try {
@@ -46,6 +71,25 @@ export default function QuestionsScreen({ navigation, route }) {
     };
 
     const scrollViewRef = React.useRef(null);
+
+    // Handle Hardware Back Button
+    useEffect(() => {
+        const backAction = () => {
+            if (page > 0) {
+                setPage(prev => prev - 1);
+                scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                return true; // Prevent default behavior
+            }
+            return false; // Allow default behavior
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction
+        );
+
+        return () => backHandler.remove();
+    }, [page]);
 
     const handleNextPage = () => {
         const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
