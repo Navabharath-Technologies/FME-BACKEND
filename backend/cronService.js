@@ -71,29 +71,29 @@ const generateAndSendReport = async () => {
 
         // Table Header
         const headers = ['S.No', 'Name', 'Email', 'Phone', 'Score', 'Location'];
-        const colWidths = [30, 90, 130, 80, 40, 150];
+        const colWidths = [30, 90, 140, 80, 40, 155];
         let x = 30;
         let y = doc.y;
 
         doc.font('Helvetica-Bold');
         headers.forEach((header, i) => {
-            doc.text(header, x, y, { width: colWidths[i], ellipsis: true });
+            doc.text(header, x, y, { width: colWidths[i] });
             x += colWidths[i];
         });
         doc.moveDown();
-        doc.moveTo(30, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveTo(30, doc.y).lineTo(565, doc.y).stroke();
         doc.moveDown(0.5);
 
         // Table Rows
         doc.font('Helvetica');
         users.forEach((user, index) => {
             // Check for page break
-            if (doc.y > 700) {
+            if (doc.y > 720) {
                 doc.addPage();
-                y = 30; // Reset y for new page
             }
 
-            y = doc.y;
+            const startY = doc.y;
+            let maxRowY = startY;
             x = 30;
 
             const rowData = [
@@ -106,9 +106,14 @@ const generateAndSendReport = async () => {
             ];
 
             rowData.forEach((text, i) => {
-                doc.text(text, x, y, { width: colWidths[i], ellipsis: true });
+                doc.text(text, x, startY, { width: colWidths[i] });
+                if (doc.y > maxRowY) {
+                    maxRowY = doc.y;
+                }
                 x += colWidths[i];
             });
+
+            doc.y = maxRowY;
             doc.moveDown(0.5);
         });
 
