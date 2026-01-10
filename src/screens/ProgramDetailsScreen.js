@@ -61,12 +61,22 @@ export default function ProgramDetailsScreen({ route, navigation }) {
                     {/* Link to Access PDF */}
                     <TouchableOpacity
                         style={{ marginTop: 20, alignItems: 'center' }}
-                        onPress={() => {
-                            const pdfUrl = `${API_URL}/public/Study_Material.pdf`;
-                            Linking.openURL(pdfUrl).catch(err => {
-                                console.error('Failed to open PDF:', err);
-                                Alert.alert('Error', 'Could not open the PDF.');
-                            });
+                        onPress={async () => {
+                            try {
+                                const response = await fetch(`${API_URL}/api/get-study-material-url`);
+                                const data = await response.json();
+                                if (data.url) {
+                                    Linking.openURL(data.url).catch(err => {
+                                        console.error('Failed to open URL:', err);
+                                        Alert.alert('Error', 'Could not open the link.');
+                                    });
+                                } else {
+                                    Alert.alert('Error', 'Link not found.');
+                                }
+                            } catch (error) {
+                                console.error('Error fetching link:', error);
+                                Alert.alert('Error', 'Could not connect to server.');
+                            }
                         }}
                     >
                         <Text style={{ color: '#1a7161', textDecorationLine: 'underline', fontWeight: 'bold' }}>

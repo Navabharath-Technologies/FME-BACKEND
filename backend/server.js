@@ -25,10 +25,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Redirect Study Material to Google Drive
-app.get('/public/Study_Material.pdf', (req, res) => {
+// API to get Study Material URL (Dynamic)
+app.get('/api/get-study-material-url', (req, res) => {
     const studyMaterialUrl = process.env.STUDY_MATERIAL_URL || 'https://drive.google.com/drive/folders/1m9Lqd4yC0V3f_C_3YEmG_yMk6fmOA0zj?usp=sharing';
-    res.redirect(studyMaterialUrl);
+    res.json({ url: studyMaterialUrl });
 });
 
 // Serve Static Files (e.g., PDFs) using absolute path
