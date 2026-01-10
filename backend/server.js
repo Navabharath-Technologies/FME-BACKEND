@@ -26,7 +26,14 @@ app.use((req, res, next) => {
 });
 
 // Serve Static Files (e.g., PDFs) using absolute path
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.pdf')) {
+            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('Content-Type', 'application/pdf');
+        }
+    }
+}));
 
 // API Endpoint to upload photo
 app.post('/api/upload-photo', async (req, res) => {
