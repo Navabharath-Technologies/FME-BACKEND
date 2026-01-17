@@ -8,7 +8,8 @@ import FloatingHelpButton from '../components/FloatingHelpButton';
 import LogoLoader from '../components/LogoLoader';
 
 export default function ExaminationScreen({ route, navigation }) {
-    const { name, email: loggedInEmail, phone: loggedInPhone } = route.params || {};
+    const { name, email: loggedInEmail, phone: loggedInPhone, deviceId } = route.params || {};
+
 
     const [programId, setProgramId] = useState('ZEDTP10264');
     const [email, setEmail] = useState('');
@@ -39,7 +40,8 @@ export default function ExaminationScreen({ route, navigation }) {
             name,
             email,
             phone,
-            programId
+            programId,
+            deviceId
         });
     };
 

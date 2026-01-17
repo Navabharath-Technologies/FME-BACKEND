@@ -26,6 +26,12 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabhara
 const sendCertificateEmail = async (email, name, score, certificateNumber, questions, userAnswers) => {
     if (!resend) { console.error("Resend not initialized, cannot send email."); return; }
     try {
+        // Format name: Capitalize first letter of each word
+        // Format name: Capitalize first letter of each word (Title Case)
+        if (name) {
+            name = name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+        }
+
         const finalMarks = score * 2;
 
         // CHECK IF FAILED

@@ -8,7 +8,7 @@ import FloatingHelpButton from '../components/FloatingHelpButton';
 import LogoLoader from '../components/LogoLoader';
 
 export default function OtpScreen({ route, navigation }) {
-    const { email, phone, name } = route.params || {};
+    const { email, phone, name, deviceId } = route.params || {};
     const [otp, setOtp] = useState(['', '', '', '']);
     const [timer, setTimer] = useState(60);
     const inputs = useRef([]);
@@ -82,13 +82,13 @@ export default function OtpScreen({ route, navigation }) {
             const response = await fetch(`${API_URL}/api/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, phone, otp: otpString })
+                body: JSON.stringify({ email, phone, otp: otpString, deviceId })
             });
             const data = await response.json();
 
             setLoading(false);
             if (response.ok && data.success) {
-                navigation.navigate('Permissions', { name, email, phone });
+                navigation.navigate('Permissions', { name, email, phone, deviceId });
             } else {
                 Alert.alert('Invalid OTP', 'The OTP you entered is incorrect. Please try again.');
             }

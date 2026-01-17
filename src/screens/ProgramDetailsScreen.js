@@ -9,7 +9,7 @@ import FloatingHelpButton from '../components/FloatingHelpButton';
 
 export default function ProgramDetailsScreen({ route, navigation }) {
     // Extract user details passed from previous screens
-    const { name, email, phone, programId } = route.params || {};
+    const { name, email, phone, programId, deviceId } = route.params || {};
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
@@ -74,16 +74,16 @@ export default function ProgramDetailsScreen({ route, navigation }) {
                         </Text>
                     </TouchableOpacity>
                     {/* Next Button */}
-                    <TouchableOpacity style={localStyles.nextButton} onPress={() => navigation.navigate('Questions', { name, email, phone, programId })}>
+                    <TouchableOpacity style={localStyles.nextButton} onPress={() => navigation.navigate('Questions', { name, email, phone, programId, deviceId })}>
                         <Text style={localStyles.nextButtonText}>Next &gt;&gt;</Text>
                     </TouchableOpacity>
 
                 </View>
-            </ScrollView>
+            </ScrollView >
 
             {/* Dynamic Help Button */}
-            <FloatingHelpButton />
-        </SafeAreaView>
+            < FloatingHelpButton />
+        </SafeAreaView >
     );
 }
 

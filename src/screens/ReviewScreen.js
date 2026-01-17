@@ -6,7 +6,7 @@ import { globalStyles } from '../styles';
 import LogoLoader from '../components/LogoLoader';
 
 export default function ReviewScreen({ route, navigation }) {
-    const { questions, userAnswers, name, email, phone } = route.params || { questions: [], userAnswers: {} };
+    const { questions, userAnswers, name, email, phone, deviceId } = route.params || { questions: [], userAnswers: {} };
     // console.log('[ReviewScreen] Rendering with:', { questionsCount: questions?.length, name, email });
     const [isChecked, setIsChecked] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,11 +29,22 @@ export default function ReviewScreen({ route, navigation }) {
 
         // Save Score to Backend
         try {
-            await fetch(`${API_URL}/api/submit-result`, {
+            const response = await fetch(`${API_URL}/api/submit-result`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, score, name, questions, userAnswers })
+                body: JSON.stringify({ email, score, name, questions, userAnswers, deviceId })
             });
+
+            const data = await response.json();
+
+            if (response.status === 403) {
+                setIsSubmitting(false);
+                Alert.alert('Session Expired', data.message || 'Logged in from another device.', [
+                    { text: 'OK', onPress: () => navigation.navigate('Home') }
+                ]);
+                return;
+            }
+
         } catch (error) {
             console.error('Failed to save score:', error);
             // Optionally alert user or just proceed

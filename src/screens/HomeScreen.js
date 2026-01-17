@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform, Modal, StatusBar } from 'react-native';
+import { getUniqueId } from 'react-native-device-info';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
@@ -83,6 +85,12 @@ export default function HomeScreen({ navigation }) {
         if (!name) {
             setNameError('Name is required.');
             valid = false;
+        } else if (!/^[a-zA-Z\s]*$/.test(name)) {
+            setNameError('Name should not contain special characters.');
+            valid = false;
+        } else if (/(.)\1{2,}/.test(name)) {
+            setNameError('Name containing continuous repeated characters are not allowed.');
+            valid = false;
         }
 
         if (!email) {
@@ -123,10 +131,12 @@ export default function HomeScreen({ navigation }) {
 
             if (response.ok) {
                 // Navigate to OTP Screen
+                const deviceId = await getUniqueId();
                 navigation.navigate('Otp', {
                     phone,
                     email,
-                    name
+                    name,
+                    deviceId
                 });
             } else {
                 Alert.alert('Error', data.message || 'Failed to send OTP.');
@@ -180,10 +190,13 @@ export default function HomeScreen({ navigation }) {
                             style={[globalStyles.input, nameError ? { borderColor: 'red', borderWidth: 1 } : null]}
                             placeholder="Full Name"
                             value={name}
+                            maxLength={50}
                             onChangeText={(text) => {
                                 setName(text);
                                 if (text && !/^[a-zA-Z\s]*$/.test(text)) {
                                     setNameError('Name should not contain special characters.');
+                                } else if (/(.)\1{2,}/.test(text)) {
+                                    setNameError('Name containing continuous repeated characters are not allowed.');
                                 } else {
                                     setNameError('');
                                 }

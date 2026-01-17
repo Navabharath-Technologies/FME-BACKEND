@@ -16,117 +16,14 @@ let savedSession = {
 };
 
 export default function QuestionsScreen({ navigation, route }) {
-    const { name, email, phone, programId } = route.params || {};
+    const { name, email, phone, programId, deviceId } = route.params || {};
 
     const [questions, setQuestions] = useState([]);
-    const [page, setPage] = useState(0); // Current Page, 0-indexed
-    const QUESTIONS_PER_PAGE = 10;
-
-    const [answers, setAnswers] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [submitModalVisible, setSubmitModalVisible] = useState(false);
-
-    // Restore session on mount
-    useEffect(() => {
-        if (savedSession.userEmail === email && savedSession.questions.length > 0) {
-            console.log('Restoring previous session and questions for:', email);
-            setAnswers(savedSession.answers);
-            setPage(savedSession.page);
-            setQuestions(savedSession.questions);
-            setLoading(false);
-        } else {
-            fetchQuestions();
-        }
-    }, []);
-
-    // Save session on updates
-    useEffect(() => {
-        if (email && questions.length > 0) {
-            savedSession = {
-                userEmail: email,
-                answers: answers,
-                page: page,
-                questions: questions
-            };
-        }
-    }, [answers, page, email, questions]);
-
-    const fetchQuestions = async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/questions`);
-            const data = await response.json();
-            if (response.ok) {
-                setQuestions(data);
-            } else {
-                Alert.alert('Error', 'Failed to load questions.');
-            }
-        } catch (error) {
-            console.error('Error fetching questions:', error);
-            Alert.alert('Error', 'Could not connect to server.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleOptionSelect = (questionId, optionKey) => {
-        setAnswers(prev => ({
-            ...prev,
-            [questionId]: optionKey
-        }));
-    };
-
-    const scrollViewRef = React.useRef(null);
-
-    // Handle Hardware Back Button
-    useEffect(() => {
-        const backAction = () => {
-            if (page > 0) {
-                setPage(prev => prev - 1);
-                scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-                return true; // Prevent default behavior
-            }
-            return false; // Allow default behavior
-        };
-
-        const backHandler = BackHandler.addEventListener(
-            'hardwareBackPress',
-            backAction
-        );
-
-        return () => backHandler.remove();
-    }, [page]);
-
-    const handleNextPage = () => {
-        const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
-        if (page < totalPages - 1) {
-            setPage(page + 1);
-            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-        } else {
-            handleSubmit();
-        }
-        if (page < totalPages - 1) {
-            setPage(page + 1);
-            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-        } else {
-            handleSubmit();
-        }
-    };
-
-    const handlePreviousPage = () => {
-        if (page > 0) {
-            setPage(page - 1);
-            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-        }
-    };
-
-    const handleSubmit = () => {
-        setSubmitModalVisible(true);
-    };
-
+    // ...
     const calculateAndNavigate = () => {
         setSubmitModalVisible(false);
         // No score calculation here, just pass data to Review Screen
-        navigation.navigate('Review', { questions, userAnswers: answers, name, email, phone });
+        navigation.navigate('Review', { questions, userAnswers: answers, name, email, phone, deviceId });
     };
 
     if (loading) {

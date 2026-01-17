@@ -3,7 +3,7 @@
     "name": "FME Facilitator Mock Exam",
     "slug": "fme-facilitator-mock-exam",
     "version": "1.0.2",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/adaptive-icon.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
