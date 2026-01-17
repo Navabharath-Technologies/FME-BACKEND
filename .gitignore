@@ -7,9 +7,6 @@
 /backend/node_modules
 /backend/.env
 
-# Keep assets directory (required by backend)
-!/assets
-
 # Keep render.yaml
 !render.yaml
 

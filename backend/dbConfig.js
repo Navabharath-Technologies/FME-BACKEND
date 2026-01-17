@@ -5,7 +5,8 @@ const dbConfig = {
     database: process.env.DB_NAME || 'FME_Unified_DB',
     options: {
         encrypt: true,
-        trustServerCertificate: true
+        trustServerCertificate: true,
+        requestTimeout: 60000 // Increase timeout to 60 seconds
     }
 };
 

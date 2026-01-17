@@ -27,9 +27,8 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
     if (!resend) { console.error("Resend not initialized, cannot send email."); return; }
     try {
         // Format name: Capitalize first letter of each word
-        // Format name: Capitalize first letter of each word (Title Case)
         if (name) {
-            name = name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+            name = name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         }
 
         const finalMarks = score * 2;
