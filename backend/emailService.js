@@ -174,11 +174,11 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
         doc.pipe(writeStream);
 
         // 1. Background Image
-        const bgPath = path.join(__dirname, '../assets/certificate_bg.png');
+        const bgPath = path.join(__dirname, 'assets/certificate_bg.png');
         doc.image(bgPath, 0, 0, { width: pdfWidth, height: pdfHeight });
 
         // 2. Text Overlays
-        const fontPath = path.join(__dirname, '../assets/OLDENGL.TTF');
+        const fontPath = path.join(__dirname, 'assets/OLDENGL.TTF');
         doc.registerFont('OldEnglish', fontPath);
 
         const textBoxX = originalWidth * 0.38 * ratio;

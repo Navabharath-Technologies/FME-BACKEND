@@ -141,13 +141,6 @@ async function initializeDatabase() {
                 await pool.query(`ALTER TABLE FME_logins.users ADD is_reported BIT DEFAULT 0`);
                 console.log('is_reported column added.');
             }
-
-            // Check device_id (for Single Session)
-            const deviceCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'device_id' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
-            if (deviceCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE FME_logins.users ADD device_id NVARCHAR(255)`);
-                console.log('device_id column added.');
-            }
         }
 
         // Create Questions table if not exists with ZED_MCQ_DB schema
@@ -395,8 +388,8 @@ app.post('/api/update-location', async (req, res) => {
 });
 
 // API Endpoint to verify OTP
-app.post('/api/verify-otp', async (req, res) => {
-    const { email, phone, otp, deviceId } = req.body;
+app.post('/api/verify-otp', (req, res) => {
+    const { email, phone, otp } = req.body;
 
     if (!otp) {
         return res.status(400).send({ message: 'OTP is required' });
@@ -404,43 +397,18 @@ app.post('/api/verify-otp', async (req, res) => {
 
     // Try to verify by Phone (preferred) or Email (fallback)
     // 1. Check Local Store First
-    let tempSuccess = false;
     if (phone && otpStore[phone] === otp) {
         delete otpStore[phone];
-        if (email) delete otpStore[email]; // Cleanup
-        tempSuccess = true;
+        delete otpStore[email];
+        return res.status(200).json({ message: 'OTP Verified Successfully (Local)', success: true });
     } else if (email && otpStore[email] === otp) {
         delete otpStore[email];
-        if (phone) delete otpStore[phone]; // Cleanup
-        tempSuccess = true;
-    }
-
-    if (tempSuccess) {
-        // Update device_id in DB to lock session
-        if (deviceId) {
-            try {
-                const pool = await sql.connect(dbConfig);
-                // We update based on email OR phone. 
-                // Since email is unique usually, let's use email if available, else phone.
-                const identifier = email || phone;
-                const column = email ? 'email' : 'phone_number';
-
-                await pool.request()
-                    .input('deviceId', sql.NVarChar, deviceId)
-                    .input('identifier', sql.NVarChar, identifier)
-                    .query(`UPDATE FME_logins.users SET device_id = @deviceId WHERE ${column} = @identifier`);
-
-                console.log(`Session locked for ${identifier} on device ${deviceId}`);
-            } catch (dbErr) {
-                console.error("Failed to update device_id:", dbErr);
-                // Proceed anyway? Or fail? 
-                // Better to succeed login but log error, or user can't login if DB is hiccuping.
-            }
-        }
+        delete otpStore[phone];
         return res.status(200).json({ message: 'OTP Verified Successfully (Local)', success: true });
     }
 
     // 2. If Local Check failed
+    // SMS Service Removed - No external verification possible
     return res.status(400).json({ message: 'Invalid OTP', success: false });
 });
 
@@ -459,30 +427,10 @@ app.get('/api/questions', async (req, res) => {
 // API Endpoint to store exam result
 app.post('/api/submit-result', async (req, res) => {
     try {
-        const { email, score, name, questions, userAnswers, deviceId } = req.body;
+        const { email, score, name, questions, userAnswers } = req.body;
 
         if (!email || score === undefined) {
             return res.status(400).json({ message: 'Email and Score are required' });
-        }
-
-        const pool = await sql.connect(dbConfig);
-
-        // Security Check: Single Session
-        if (deviceId) {
-            const sessionCheck = await pool.request()
-                .input('email', sql.NVarChar, email)
-                .query("SELECT device_id FROM FME_logins.users WHERE email = @email");
-
-            if (sessionCheck.recordset.length > 0) {
-                const storedDevice = sessionCheck.recordset[0].device_id;
-                // If storedDevice exists and doesn't match current, block.
-                if (storedDevice && storedDevice !== deviceId) {
-                    return res.status(403).json({
-                        message: 'Session Expired. You have logged in from another device.',
-                        logout: true
-                    });
-                }
-            }
         }
 
         let certNo = null;
@@ -495,6 +443,8 @@ app.post('/api/submit-result', async (req, res) => {
             const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
             certNo = `ZF${today.getFullYear()}${randomNum}`;
         }
+
+        const pool = await sql.connect(dbConfig);
 
         // Update DB
         // If certNo is null, we can either set it specifically null or just not update it.
