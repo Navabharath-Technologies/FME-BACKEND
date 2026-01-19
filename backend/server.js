@@ -121,21 +121,11 @@ async function initializeDatabase() {
                 }
             }
 
-            // Check Final Marks
-            const finalScoreCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'final_marks' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
-            if (finalScoreCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE FME_logins.users ADD final_marks INT`);
-                console.log('Final marks column added.');
-            }
-
-            // Check & Drop Old Exam Score Column if it exists (As per user request)
+            // Check Exam Score
             const scoreCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'exam_score' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
-            if (scoreCheck.recordset.length > 0) {
-                // Warning: This drops the column and deletes data in it.
-                await pool.query(`ALTER TABLE FME_logins.users DROP COLUMN exam_score`);
-                console.log('Old exam_score column dropped.');
-            } else {
-                console.log('exam_score column already removed or does not exist.');
+            if (scoreCheck.recordset.length === 0) {
+                await pool.query(`ALTER TABLE FME_logins.users ADD exam_score INT`);
+                console.log('Exam score column added.');
             }
 
             // Check Last Login
@@ -270,6 +260,7 @@ app.post('/api/login', async (req, res) => {
         // Generate 4-digit OTP
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
+        // Store user identifier (phone) with OTP
         // Store user identifier (phone) with OTP
         if (otpChannel === 'sms') {
             // For SMS, only store for phone verification
@@ -461,15 +452,15 @@ app.post('/api/submit-result', async (req, res) => {
         // Note: Users might re-take exam. Should we overwrite previous cert? Yes.
         await pool.request()
             .input('email', sql.NVarChar, email)
-            .input('finalMarks', sql.Int, finalMarks)
+            .input('score', sql.Int, finalMarks) // Store Final Marks (out of 100)
             .input('certNo', sql.NVarChar, certNo) // Can be null
             .query(`
                 UPDATE FME_logins.users 
-                SET final_marks = @finalMarks, certificate_number = @certNo
+                SET exam_score = @score, certificate_number = @certNo
                 WHERE email = @email
             `);
 
-        console.log(`Final Marks updated for ${email}: ${finalMarks}. Cert: ${certNo}`);
+        console.log(`Score updated for ${email}: ${score}. Cert: ${certNo}`);
 
         // Send Certificate Email (Pass questions/answers for failure report)
         await sendCertificateEmail(email, name, score, certNo, questions, userAnswers);
