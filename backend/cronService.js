@@ -70,8 +70,8 @@ const generateAndSendReport = async () => {
         doc.moveDown();
 
         // Table Header
-        const headers = ['S.No', 'Name', 'Email', 'Phone', 'Score', 'Location'];
-        const colWidths = [30, 90, 140, 80, 40, 155];
+        const headers = ['S.No', 'Name', 'Email', 'Phone', 'Final Marks', 'Location'];
+        const colWidths = [30, 90, 140, 80, 60, 135];
         let x = 30;
         let y = doc.y;
 
@@ -101,7 +101,7 @@ const generateAndSendReport = async () => {
                 user.name || 'N/A',
                 user.email || 'N/A',
                 user.phone_number || 'N/A',
-                user.finalMarks !== null ? String(user.finalMarks) : '-',
+                user.finalMarks !== null && user.finalMarks !== undefined ? String(user.finalMarks) : '-',
                 user.location_link || 'N/A'
             ];
 
