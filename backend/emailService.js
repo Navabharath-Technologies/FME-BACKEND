@@ -38,7 +38,8 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
                 if (word.length <= 2) {
                     return word.toUpperCase();
                 }
-                return word.charAt(0).toUpperCase() + word.slice(1);
+                // Default: Proper Noun case (First Cap, rest lower)
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             }).join(' ');
         }
 

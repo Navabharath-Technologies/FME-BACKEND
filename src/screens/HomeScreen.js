@@ -191,8 +191,8 @@ export default function HomeScreen({ navigation }) {
                             value={name}
                             maxLength={20}
                             onChangeText={(text) => {
-                                // Auto-capitalization: First letter and after space
-                                let newText = text.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+                                // Auto-capitalization: Lowercase everything first -> Capitalize first letter of each word
+                                let newText = text.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
 
                                 setName(newText);
                                 if (newText && !/^[a-zA-Z\s]*$/.test(newText)) {
