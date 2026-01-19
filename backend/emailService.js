@@ -27,8 +27,14 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
     if (!resend) { console.error("Resend not initialized, cannot send email."); return; }
     try {
         // Format name: Capitalize first letter of each word
+        // Format name: Capitalize first letter of each word; specific rule for initials (<= 2 chars) -> ALL CAPS
         if (name) {
-            name = name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            name = name.split(' ').map(word => {
+                if (word.length <= 2) {
+                    return word.toUpperCase();
+                }
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            }).join(' ');
         }
 
         const finalMarks = score * 2;
@@ -174,11 +180,11 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
         doc.pipe(writeStream);
 
         // 1. Background Image
-        const bgPath = path.join(__dirname, 'assets/certificate_bg.png');
+        const bgPath = path.join(__dirname, '../assets/certificate_bg.png');
         doc.image(bgPath, 0, 0, { width: pdfWidth, height: pdfHeight });
 
         // 2. Text Overlays
-        const fontPath = path.join(__dirname, 'assets/OLDENGL.TTF');
+        const fontPath = path.join(__dirname, '../assets/OLDENGL.TTF');
         doc.registerFont('OldEnglish', fontPath);
 
         const textBoxX = originalWidth * 0.38 * ratio;

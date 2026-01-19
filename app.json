@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "FME Facilitator Mock Exam",
+    "slug": "fme-facilitator-mock-exam",
+    "version": "1.0.2",
+    "orientation": "default",
+    "icon": "./assets/adaptive-icon.jpg",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "versionCode": 3,
+      "package": "com.navabharathtechnologies.FMEapp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "softwareKeyboardLayoutMode": "pan",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bd2179c2-883b-4acc-ace5-7df16bdc6b94"
+      }
+    }
+  }
+}
