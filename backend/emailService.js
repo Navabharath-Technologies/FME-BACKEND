@@ -30,6 +30,11 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
         // Format name: Capitalize first letter of each word; specific rule for initials (<= 2 chars) -> ALL CAPS
         if (name) {
             name = name.split(' ').map(word => {
+                // If 2 letters and likely initials (no vowels), 
+                if (word.length === 2 && !/[aeiouAEIOU]/.test(word)) {
+                    return word.split('').join(' ').toUpperCase();
+                }
+                // Existing logic: small words/initials -> CAPS
                 if (word.length <= 2) {
                     return word.toUpperCase();
                 }
@@ -39,7 +44,6 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
 
         const finalMarks = score * 2;
 
-        // CHECK IF FAILED
         // CHECK IF FAILED
         if (finalMarks < 80) {
             // Generate Review PDF

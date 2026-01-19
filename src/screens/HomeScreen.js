@@ -191,14 +191,29 @@ export default function HomeScreen({ navigation }) {
                             value={name}
                             maxLength={20}
                             onChangeText={(text) => {
-                                setName(text);
-                                if (text && !/^[a-zA-Z\s]*$/.test(text)) {
+                                // Auto-capitalization: First letter and after space
+                                let newText = text.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+
+                                setName(newText);
+                                if (newText && !/^[a-zA-Z\s]*$/.test(newText)) {
                                     setNameError('Name should not contain special characters.');
-                                } else if (/(.)\1{2,}/.test(text)) {
+                                } else if (/(.)\1{2,}/.test(newText)) {
                                     setNameError('Name containing continuous repeated characters are not allowed.');
                                 } else {
                                     setNameError('');
                                 }
+                            }}
+                            onBlur={() => {
+                                // Initials logic: Scan parts of the name
+                                // If a part is 2 letters and has NO vowels (likely initials like 'vr', 'sk'), format as 'V R', 'S K'
+                                let parts = name.split(' ');
+                                parts = parts.map(p => {
+                                    if (p.length === 2 && !/[aeiouAEIOU]/.test(p)) {
+                                        return p.split('').join(' ').toUpperCase();
+                                    }
+                                    return p;
+                                });
+                                setName(parts.join(' '));
                             }}
                             returnKeyType="next"
                             onSubmitEditing={() => emailRef.current?.focus()}
