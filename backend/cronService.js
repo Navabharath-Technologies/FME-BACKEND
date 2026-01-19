@@ -101,7 +101,7 @@ const generateAndSendReport = async () => {
                 user.name || 'N/A',
                 user.email || 'N/A',
                 user.phone_number || 'N/A',
-                user.exam_score !== null ? String(user.exam_score) : '-',
+                user.finalMarks !== null ? String(user.finalMarks) : '-',
                 user.location_link || 'N/A'
             ];
 

@@ -121,11 +121,24 @@ async function initializeDatabase() {
                 }
             }
 
-            // Check Exam Score
-            const scoreCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'exam_score' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
-            if (scoreCheck.recordset.length === 0) {
-                await pool.query(`ALTER TABLE FME_logins.users ADD exam_score INT`);
-                console.log('Exam score column added.');
+            // Check Final Marks (Renaming logic)
+            const fmCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'finalMarks' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
+            const esCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'exam_score' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
+
+            if (esCheck.recordset.length > 0) {
+                // exam_score exists. We want to rename it to finalMarks.
+                if (fmCheck.recordset.length > 0) {
+                    // Both exist. User asked to delete the extra 'finalMarks' column so we can rename 'exam_score' into it.
+                    await pool.query(`ALTER TABLE FME_logins.users DROP COLUMN finalMarks`);
+                    console.log('Dropped extra finalMarks column.');
+                }
+                // Rename exam_score -> finalMarks
+                await pool.query(`EXEC sp_rename 'FME_logins.users.exam_score', 'finalMarks', 'COLUMN'`);
+                console.log('Renamed exam_score to finalMarks.');
+            } else if (fmCheck.recordset.length === 0) {
+                // Neither exists. Create finalMarks.
+                await pool.query(`ALTER TABLE FME_logins.users ADD finalMarks INT`);
+                console.log('FinalMarks column added.');
             }
 
             // Check Last Login
@@ -456,7 +469,7 @@ app.post('/api/submit-result', async (req, res) => {
             .input('certNo', sql.NVarChar, certNo) // Can be null
             .query(`
                 UPDATE FME_logins.users 
-                SET exam_score = @score, certificate_number = @certNo
+                SET finalMarks = @score, certificate_number = @certNo
                 WHERE email = @email
             `);
 
