@@ -30,15 +30,15 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
         // Format name: Capitalize first letter of each word; specific rule for initials (<= 2 chars) -> ALL CAPS
         if (name) {
             name = name.split(' ').map(word => {
-                // If 2 letters and likely initials (no vowels), 
-                if (word.length === 2 && !/[aeiouAEIOU]/.test(word)) {
+                // If 2 letters, treat as initials -> add space between them
+                if (word.length === 2) {
                     return word.split('').join(' ').toUpperCase();
                 }
-                // Existing logic: small words/initials -> CAPS
-                if (word.length <= 2) {
+                // Single letter -> CAPS
+                if (word.length === 1) {
                     return word.toUpperCase();
                 }
-                // Default: Proper Noun case (First Cap, rest lower)
+                // More than 2 letters -> Title Case
                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             }).join(' ');
         }
