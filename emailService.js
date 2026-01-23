@@ -317,11 +317,8 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
                     fs.unlink(pdfPath, (err) => { if (err) console.error(err); });
                     resolve(); // Resolve
                 } catch (err) {
-                    console.error('Error sending mail via Resend:', err);
-
-                    // Try logging the full error if possible, Resend errors are often objects
-                    if (err.response) console.error(err.response.data);
-                    reject(err); // Reject
+                    console.error('[EmailService] Resend Error:', JSON.stringify(err, null, 2));
+                    reject(err);
                 }
             });
 
