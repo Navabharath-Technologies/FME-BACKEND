@@ -10,23 +10,12 @@ const dbConfig = require('./dbConfig');
 const generateAndSendReport = async () => {
     console.log(`[CRON] Starting daily report generation at ${new Date().toISOString()}...`);
     let pool;
+    let users = [];
     try {
         pool = await sql.connect(dbConfig);
 
         // Calculate 'Yesterday' and 'Today' based on IST Timezone
-        // We want the report for the previous full day (00:00 to 23:59)
         const now = new Date();
-
-        // Get IST time string
-        const istOptions = { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' };
-
-        // Setup "Yesterday"
-        const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Subtract 24 hours
-        // Format to YYYY-MM-DD using IST
-        // Note: Intl.DateTimeFormat parts can be tricky, let's use a simpler approach if environment allows, 
-        // but robust way is getting parts.
-        // Actually, since we are moving the execution time to 6 AM, 'now' is Today 6 AM.
-        // So 'Yesterday' is strictly Date - 1 Day.
 
         // Helper to format date as YYYY-MM-DD in IST
         const getISTDateString = (dateObj) => {
@@ -34,28 +23,33 @@ const generateAndSendReport = async () => {
         };
 
         const todayIST = getISTDateString(now); // e.g., "2026-01-10"
+
+        // Setup "Yesterday"
+        const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Subtract 24 hours
         const yesterdayIST = getISTDateString(yesterdayDate); // e.g., "2026-01-09"
 
         console.log(`[CRON] Fetching report for Date Range: ${yesterdayIST} 00:00:00 to ${todayIST} 00:00:00 (IST)`);
 
-        // Fetch users who haven't been reported yet
-        // Using string literals for dates ensures server timezone settings don't shift the window
+        // ATOMIC OPERATION: Update is_reported to 1 AND fetch the records in one go.
+        // This prevents race conditions where two processes might fetch the same records.
         const result = await pool.request().query(`
-            SELECT * FROM FME_logins.users 
+            UPDATE FME_logins.users
+            SET is_reported = 1
+            OUTPUT INSERTED.*
             WHERE created_at >= CAST('${yesterdayIST}' AS DATE)
             AND created_at < CAST('${todayIST}' AS DATE)
             AND (is_reported = 0 OR is_reported IS NULL)
-            ORDER BY created_at DESC
         `);
-        const users = result.recordset;
+
+        users = result.recordset;
 
         if (users.length === 0) {
-            console.log('[CRON] No new unreported users found.');
+            console.log('[CRON] No new unreported users found (or already processed by another instance).');
             return;
         }
 
         const userIds = users.map(u => u.id || u.ID || u.Id).filter(id => id != null);
-        console.log('[CRON] User IDs to update:', userIds);
+        console.log(`[CRON] Locked ${users.length} users for reporting. IDs:`, userIds);
 
         // Create PDF
         const doc = new PDFDocument({ margin: 30 });
@@ -120,58 +114,63 @@ const generateAndSendReport = async () => {
         doc.end();
 
         // Wait for PDF to finish writing
-        stream.on('finish', async () => {
-            try {
-                // Send Email
-                // Send Email via Resend
-                const { Resend } = require('resend');
-                const resend = new Resend(process.env.RESEND_API_KEY);
-                const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabharathtechnologies.com';
+        await new Promise((resolve, reject) => {
+            stream.on('finish', resolve);
+            stream.on('error', reject);
+        });
 
-                const pdfBuffer = fs.readFileSync(filePath);
+        // Send Email via Resend
+        const { Resend } = require('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'zedcertifications@navabharathtechnologies.com';
 
-                const { error } = await resend.emails.send({
-                    from: FROM_EMAIL,
-                    to: 'zedcertifications@navabharathtechnologies.com',
-                    subject: 'FME App New Entries Report',
-                    text: `Please find attached the PDF report containing ${users.length} new user entries.`,
-                    attachments: [
-                        {
-                            filename: `User_Report_${new Date().toISOString().split('T')[0]}.pdf`,
-                            content: pdfBuffer
-                        }
-                    ]
-                });
+        const pdfBuffer = fs.readFileSync(filePath);
 
-                if (error) {
-                    console.error('[CRON] Error sending email via Resend:', error);
-                    return;
+        const { error } = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: 'zedcertifications@navabharathtechnologies.com',
+            subject: 'FME App New Entries Report',
+            text: `Please find attached the PDF report containing ${users.length} new user entries.`,
+            attachments: [
+                {
+                    filename: `User_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+                    content: pdfBuffer
                 }
+            ]
+        });
 
-                console.log('[CRON] Report email sent successfully via Resend.');
+        if (error) {
+            console.error('[CRON] Error sending email via Resend:', error);
+            throw new Error(`Resend Email Failed: ${error.message}`);
+        }
 
-                // Mark users as reported
-                if (userIds.length > 0) {
-                    await pool.request().query(`
-                        UPDATE FME_logins.users 
-                        SET is_reported = 1 
-                        WHERE id IN(${userIds.join(',')})
-            `);
-                    console.log(`[CRON] Marked ${userIds.length} users as reported.`);
-                }
+        console.log('[CRON] Report email sent successfully via Resend.');
 
-                // Cleanup: Delete local PDF file
-                fs.unlink(filePath, (err) => {
-                    if (err) console.error('[CRON] Error deleting report file:', err);
-                });
-
-            } catch (emailErr) {
-                console.error('[CRON] Error sending email:', emailErr);
-            }
+        // Cleanup: Delete local PDF file
+        fs.unlink(filePath, (err) => {
+            if (err) console.error('[CRON] Error deleting report file:', err);
         });
 
     } catch (err) {
         console.error('[CRON] Error generating report:', err);
+
+        // REVERT Logic: If we locked users but failed to process/send, unlock them.
+        if (users.length > 0) {
+            console.log('[CRON] Reverting is_reported status due to failure...');
+            try {
+                const userIds = users.map(u => u.id || u.ID || u.Id).filter(id => id != null);
+                if (userIds.length > 0) {
+                    await pool.request().query(`
+                        UPDATE FME_logins.users 
+                        SET is_reported = 0 
+                        WHERE id IN (${userIds.join(',')})
+                    `);
+                    console.log(`[CRON] Reverted status for ${userIds.length} users.`);
+                }
+            } catch (revertErr) {
+                console.error('[CRON] CRITICAL: Failed to revert user status:', revertErr);
+            }
+        }
     }
 };
 

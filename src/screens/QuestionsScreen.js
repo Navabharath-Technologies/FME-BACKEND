@@ -8,11 +8,21 @@ import LogoLoader from '../components/LogoLoader';
 
 
 // In-memory session storage to persist state on accidental back navigation
+// In-memory session storage to persist state on accidental back navigation
 let savedSession = {
     userEmail: null,
     answers: {},
     page: 0,
     questions: []
+};
+
+export const resetSession = () => {
+    savedSession = {
+        userEmail: null,
+        answers: {},
+        page: 0,
+        questions: []
+    };
 };
 
 export default function QuestionsScreen({ navigation, route }) {

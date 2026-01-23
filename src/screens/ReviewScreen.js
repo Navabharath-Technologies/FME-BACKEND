@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../config';
 import { globalStyles } from '../styles';
 import LogoLoader from '../components/LogoLoader';
+import { resetSession } from './QuestionsScreen';
 
 export default function ReviewScreen({ route, navigation }) {
     const { questions, userAnswers, name, email, phone } = route.params || { questions: [], userAnswers: {} };
@@ -40,6 +41,9 @@ export default function ReviewScreen({ route, navigation }) {
         }
 
         setIsSubmitting(false);
+
+        // Clear session so next test starts fresh
+        resetSession();
 
         // Navigate to Result
         navigation.replace('Result', { score, totalQuestions: questions.length, userAnswers, questions, name });

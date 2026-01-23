@@ -2,7 +2,7 @@
   "expo": {
     "name": "FME Facilitator Mock Exam",
     "slug": "fme-facilitator-mock-exam",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/adaptive-icon.jpg",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "package": "com.navabharathtechnologies.FMEapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.jpg",
