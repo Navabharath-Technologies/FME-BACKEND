@@ -2,6 +2,7 @@ const { Resend } = require('resend');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const os = require('os');
 
 require('dotenv').config();
 
