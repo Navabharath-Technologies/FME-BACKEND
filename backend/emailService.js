@@ -8,6 +8,7 @@ require('dotenv').config();
 // Initialize Resend
 let resend;
 if (process.env.RESEND_API_KEY) {
+    console.log('[EmailService] Initializing Resend with Key:', process.env.RESEND_API_KEY ? 'Present' : 'Missing');
     resend = new Resend(process.env.RESEND_API_KEY);
 } else {
     console.warn("WARNING: RESEND_API_KEY is missing. Email service will not work.");
@@ -30,18 +31,17 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
         // Format name: Capitalize first letter of each word; specific rule for initials (<= 2 chars) -> ALL CAPS
         if (name) {
             name = name.split(' ').map(word => {
-                // If 2 letters, treat as initials -> add space between them
                 if (word.length === 2) {
                     return word.split('').join(' ').toUpperCase();
                 }
-                // Single letter -> CAPS
                 if (word.length === 1) {
                     return word.toUpperCase();
                 }
-                // More than 2 letters -> Title Case
                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             }).join(' ');
         }
+
+        console.log(`[EmailService] Starting certificate generation for: ${email} (Score: ${score})`);
 
         const finalMarks = score * 2;
 
@@ -186,10 +186,16 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
 
         // 1. Background Image
         const bgPath = path.join(__dirname, 'assets/certificate_bg.png');
+        if (!fs.existsSync(bgPath)) console.error(`[EmailService] ERROR: Background image not found at ${bgPath}`);
+        else console.log(`[EmailService] Background image found at ${bgPath}`);
+
         doc.image(bgPath, 0, 0, { width: pdfWidth, height: pdfHeight });
 
         // 2. Text Overlays
         const fontPath = path.join(__dirname, 'assets/OLDENGL.TTF');
+        if (!fs.existsSync(fontPath)) console.error(`[EmailService] ERROR: Font not found at ${fontPath}`);
+        else console.log(`[EmailService] Font found at ${fontPath}`);
+
         doc.registerFont('OldEnglish', fontPath);
 
         const textBoxX = originalWidth * 0.38 * ratio;
@@ -288,7 +294,7 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
                         }
                     ]
                 });
-                console.log(`Certificate email sent to ${email} via Resend`);
+                console.log(`[EmailService] Certificate email sent to ${email} via Resend successfully.`);
 
                 // Cleanup
                 fs.unlink(pdfPath, (err) => { if (err) console.error(err); });
