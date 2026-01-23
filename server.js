@@ -449,8 +449,7 @@ app.post('/api/submit-result', async (req, res) => {
         let certNo = null;
         const finalMarks = score * 2;
 
-        // Generate Certificate Number ONLY if they passed (Assuming 80 is pass mark based on emailService logic)
-        // Wait, emailService checks finalMarks < 80.
+        // Generate Certificate Number ONLY if they passed
         if (finalMarks >= 80) {
             const today = new Date();
             const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
