@@ -196,17 +196,24 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
 
             // 1. Background Image
             const bgPath = path.join(__dirname, 'assets/certificate_bg.png');
-            if (!fs.existsSync(bgPath)) console.error(`[EmailService] ERROR: Background image not found at ${bgPath}`);
-            else console.log(`[EmailService] Background image found at ${bgPath}`);
-
-            doc.image(bgPath, 0, 0, { width: pdfWidth, height: pdfHeight });
+            if (fs.existsSync(bgPath)) {
+                console.log(`[EmailService] Background image found at ${bgPath}`);
+                doc.image(bgPath, 0, 0, { width: pdfWidth, height: pdfHeight });
+            } else {
+                console.error(`[EmailService] CRISIS: Background image NOT found at ${bgPath}. Generating without background.`);
+            }
 
             // 2. Text Overlays
             const fontPath = path.join(__dirname, 'assets/OLDENGL.TTF');
-            if (!fs.existsSync(fontPath)) console.error(`[EmailService] ERROR: Font not found at ${fontPath}`);
-            else console.log(`[EmailService] Font found at ${fontPath}`);
+            let fontToUse = 'Helvetica'; // Default fallback
 
-            doc.registerFont('OldEnglish', fontPath);
+            if (fs.existsSync(fontPath)) {
+                console.log(`[EmailService] Font found at ${fontPath}`);
+                doc.registerFont('OldEnglish', fontPath);
+                fontToUse = 'OldEnglish';
+            } else {
+                console.error(`[EmailService] CRISIS: Font NOT found at ${fontPath}. Using standard font.`);
+            }
 
             const textBoxX = originalWidth * 0.38 * ratio;
             const textBoxY = originalHeight * 0.56 * ratio;
@@ -227,7 +234,7 @@ const sendCertificateEmail = async (email, name, score, certificateNumber, quest
 
             doc.moveDown(0.2);
 
-            doc.font('OldEnglish')
+            doc.font(fontToUse === 'OldEnglish' ? 'OldEnglish' : 'Helvetica-Bold')
                 .fontSize(30)
                 .fillColor('#8B0000')
                 .text('ZED Facilitator', { width: textBoxWidth, align: 'center' });
