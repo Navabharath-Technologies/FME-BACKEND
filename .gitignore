@@ -29,7 +29,7 @@ yarn-error.log*
 *.keystore
 *.pem
 # google-services.json
-GoogleService-Info.plist
+# GoogleService-Info.plist
 
 # Editor
 .vscode/
