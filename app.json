@@ -2,7 +2,7 @@
   "expo": {
     "name": "FME Facilitator Mock Exam",
     "slug": "fme-facilitator-mock-exam",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "default",
     "icon": "./assets/adaptive-icon.jpg",
     "userInterfaceStyle": "light",
