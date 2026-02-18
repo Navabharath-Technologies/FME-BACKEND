@@ -1,2 +1,27 @@
 node_modules/
 .env
+/backend/.env
+
+# Android/iOS build files (optional if they want to track native code, but usually good to ignore build artifacts)
+android/app/build/
+android/app/src/main/assets/
+ios/Pods/
+ios/build/
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Keys
+*.jks
+*.keystore
+*.pem
+# google-services.json
+# GoogleService-Info.plist
+
+# Editor
+.vscode/
+.idea/

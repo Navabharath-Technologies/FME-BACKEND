@@ -1,0 +1,5 @@
+{
+    "react-native": {
+        "ios_modular_headers": true
+    }
+}

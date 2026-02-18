@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "FME Facilitator Mock Exam",
+    "slug": "fme-facilitator-mock-exam",
+    "version": "1.0.3",
+    "orientation": "default",
+    "icon": "./assets/adaptive-icon.jpg",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.navabharathtechnologies.FMEapp",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Camera access is used to capture identity verification images during mock examination sessions to ensure the registered freelancer is taking the test. Images are used only for exam integrity verification.",
+        "NSLocationWhenInUseUsageDescription": "Location access is used during mock examination sessions to verify that the freelancer is taking the test from their registered work location for compliance and monitoring purposes."
+      },
+      "icon": "./assets/adaptive-icon.jpg"
+    },
+    "android": {
+      "versionCode": 4,
+      "package": "com.navabharathtechnologies.FMEapp",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "softwareKeyboardLayoutMode": "pan",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "expo-dev-client",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bd2179c2-883b-4acc-ace5-7df16bdc6b94"
+      }
+    }
+  }
+}
