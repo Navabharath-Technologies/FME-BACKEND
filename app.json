@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "4",
+      "buildNumber": "5",
       "bundleIdentifier": "com.navabharathtechnologies.FMEapp",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -25,7 +25,7 @@
       "icon": "./assets/adaptive-icon.jpg"
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 5,
       "package": "com.navabharathtechnologies.FMEapp",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
