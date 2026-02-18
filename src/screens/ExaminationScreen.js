@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image, Platform, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image, Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
@@ -44,7 +45,8 @@ export default function ExaminationScreen({ route, navigation }) {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <StatusBar style="dark" translucent />
             <ScrollView contentContainerStyle={localStyles.scrollContainer}>
 
                 {/* App Header with Logo */}

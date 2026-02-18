@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image, Modal, Platform, StatusBar, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image, Modal, Platform, BackHandler } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
@@ -162,6 +163,7 @@ export default function QuestionsScreen({ navigation, route }) {
 
     return (
         <SafeAreaView style={localStyles.safeArea}>
+            <StatusBar style="dark" translucent />
             <ScrollView
                 ref={scrollViewRef}
                 contentContainerStyle={localStyles.scrollContainer}
@@ -272,7 +274,6 @@ const localStyles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     scrollContainer: {
         flexGrow: 1,

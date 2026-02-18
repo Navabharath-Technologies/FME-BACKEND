@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image, Platform, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image, Platform, Alert } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
@@ -12,7 +13,8 @@ export default function ProgramDetailsScreen({ route, navigation }) {
     const { name, email, phone, programId } = route.params || {};
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <StatusBar style="dark" translucent />
             <ScrollView contentContainerStyle={localStyles.scrollContainer}>
                 {/* App Header with Logo */}
                 <View style={[globalStyles.header, { marginBottom: 10 }]}>

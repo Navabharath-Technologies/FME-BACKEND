@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Platform, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Platform, ActivityIndicator, Linking } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -99,17 +100,21 @@ export default function CameraScreen({ route, navigation }) {
     if (!permission.granted) {
         return (
             <View style={[globalStyles.container, styles.centerMsg]}>
-                <Text style={styles.title}>Camera Permission Required</Text>
-                <Text style={styles.subtitle}>We need access to your camera to verify your identity.</Text>
-                <TouchableOpacity style={[globalStyles.btnPrimary, { marginTop: 20 }]} onPress={requestPermission}>
-                    <Text style={globalStyles.btnText}>Grant Permission</Text>
+                <Text style={styles.title}>Camera Access</Text>
+                <Text style={styles.subtitle}>Camera access is required to capture your photo for identity verification. Please enable it in settings.</Text>
+                <TouchableOpacity style={[globalStyles.btnPrimary, { marginTop: 20 }]} onPress={() => Linking.openSettings()}>
+                    <Text style={globalStyles.btnText}>Open Settings</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ marginTop: 20 }} onPress={() => navigation.goBack()}>
+                    <Text style={{ color: '#666', fontSize: 16 }}>Cancel</Text>
                 </TouchableOpacity>
             </View>
         );
     }
 
     return (
-        <SafeAreaView style={[globalStyles.container, { padding: 0, alignItems: 'center', backgroundColor: '#fff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <SafeAreaView style={[globalStyles.container, { padding: 0, alignItems: 'center', backgroundColor: '#fff' }]}>
+            <StatusBar style="dark" translucent />
 
 
             <View style={styles.contentContainer}>

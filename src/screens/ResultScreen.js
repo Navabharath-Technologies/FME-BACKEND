@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, BackHandler, ScrollView, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, BackHandler, ScrollView, Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 
@@ -19,7 +20,8 @@ export default function ResultScreen({ route, navigation }) {
     const finalMarks = score * 2;
 
     return (
-        <SafeAreaView style={[localStyles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <SafeAreaView style={localStyles.container}>
+            <StatusBar style="dark" translucent />
             <ScrollView contentContainerStyle={localStyles.scrollContainer} bounces={false}>
 
                 {/* 1. Header (Logo + Title) */}

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Platform, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { globalStyles } from '../styles';
 import { API_URL } from '../config';
@@ -100,51 +101,59 @@ export default function OtpScreen({ route, navigation }) {
     };
 
     return (
-        <SafeAreaView style={[globalStyles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-            <View style={{ alignItems: 'center' }}>
-                <Image source={require('../../assets/icon.png')} style={styles.logoImage} resizeMode="contain" />
-            </View>
-            <Text style={styles.headerTitle}>OTP Verification</Text>
+        <SafeAreaView style={globalStyles.container}>
+            <StatusBar style="dark" translucent />
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, justifyContent: 'center' }} showsVerticalScrollIndicator={false}>
+                    <View style={{ alignItems: 'center' }}>
+                        <Image source={require('../../assets/icon.png')} style={styles.logoImage} resizeMode="contain" />
+                    </View>
+                    <Text style={styles.headerTitle}>OTP Verification</Text>
 
-            <View style={[styles.messageBox, styles.success]}>
-                <Text style={styles.successText}>OTP is successfully sent to {email}, if not received, please check your junk/spam.</Text>
-            </View>
+                    <View style={[styles.messageBox, styles.success]}>
+                        <Text style={styles.successText}>OTP is successfully sent to {email}, if not received, please check your junk/spam.</Text>
+                    </View>
 
-            <Text style={styles.instruction}>Enter the 4-digit code sent to your email.</Text>
-            <View style={styles.otpContainer}>
-                {otp.map((digit, index) => (
-                    <TextInput
-                        key={index}
-                        style={styles.otpInput}
-                        keyboardType="number-pad"
-                        maxLength={1}
-                        value={digit}
-                        onChangeText={(text) => handleChange(text, index)}
-                        onKeyPress={({ nativeEvent }) => {
-                            if (nativeEvent.key === 'Backspace') handleBackspace(digit, index);
-                        }}
-                        ref={(ref) => inputs.current[index] = ref}
-                    />
-                ))}
-            </View>
+                    <Text style={styles.instruction}>Enter the 4-digit code sent to your email.</Text>
+                    <View style={styles.otpContainer}>
+                        {otp.map((digit, index) => (
+                            <TextInput
+                                key={index}
+                                style={styles.otpInput}
+                                keyboardType="number-pad"
+                                maxLength={1}
+                                value={digit}
+                                onChangeText={(text) => handleChange(text, index)}
+                                onKeyPress={({ nativeEvent }) => {
+                                    if (nativeEvent.key === 'Backspace') handleBackspace(digit, index);
+                                }}
+                                ref={(ref) => inputs.current[index] = ref}
+                            />
+                        ))}
+                    </View>
 
-            <View style={styles.timerBox}>
-                {resendEnabled ? (
-                    <TouchableOpacity onPress={handleResend}>
-                        <Text style={[styles.timerText, { color: '#1a7161', fontWeight: 'bold' }]}>Resend OTP</Text>
+                    <View style={styles.timerBox}>
+                        {resendEnabled ? (
+                            <TouchableOpacity onPress={handleResend}>
+                                <Text style={[styles.timerText, { color: '#1a7161', fontWeight: 'bold' }]}>Resend OTP</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <Text style={styles.timerText}>Resend OTP will be activated after {timer} secs</Text>
+                        )}
+                    </View>
+
+                    <View style={[styles.messageBox, styles.warning]}>
+                        <Text style={styles.warningText}>If you have not received the OTP, then please re-check the Email ID.</Text>
+                    </View>
+
+                    <TouchableOpacity style={globalStyles.btnPrimary} onPress={handleVerify}>
+                        <Text style={globalStyles.btnText}>VERIFY CODE</Text>
                     </TouchableOpacity>
-                ) : (
-                    <Text style={styles.timerText}>Resend OTP will be activated after {timer} secs</Text>
-                )}
-            </View>
-
-            <View style={[styles.messageBox, styles.warning]}>
-                <Text style={styles.warningText}>If you have not received the OTP, then please re-check the Email ID.</Text>
-            </View>
-
-            <TouchableOpacity style={globalStyles.btnPrimary} onPress={handleVerify}>
-                <Text style={globalStyles.btnText}>VERIFY CODE</Text>
-            </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
             {/* Dynamic Help Button */}
             <FloatingHelpButton />
             <LogoLoader visible={loading} />

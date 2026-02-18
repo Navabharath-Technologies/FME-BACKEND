@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '../config';
 import { globalStyles } from '../styles';
@@ -51,6 +52,7 @@ export default function ReviewScreen({ route, navigation }) {
 
     return (
         <SafeAreaView style={localStyles.safeArea}>
+            <StatusBar style="dark" translucent />
             <View style={localStyles.container}>
                 <ScrollView contentContainerStyle={localStyles.scrollContainer} stickyHeaderIndices={[1]}>
                     {/* Header with Logo and Tagline */}
@@ -143,7 +145,6 @@ const localStyles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     container: {
         flex: 1,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Platform, StatusBar } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Platform, Linking } from "react-native";
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Location from 'expo-location';
@@ -19,17 +20,34 @@ export default function PermissionsScreen({ navigation, route }) {
             let { status } = await Location.requestForegroundPermissionsAsync();
 
             if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Permission to access location was denied. Location is required.');
-                setLoading(false);
-                return;
+                if (status !== 'granted') {
+                    Alert.alert(
+                        'Permission Required',
+                        'Location access is needed to verify your registered work location. Please enable it in settings.',
+                        [
+                            { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
+                            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+                        ]
+                    );
+                    return;
+                }
             }
 
             // 2. Request Camera Permission
             const cameraStatus = await requestCameraPermission();
             if (!cameraStatus.granted) {
-                Alert.alert('Permission Denied', 'Camera permission is required to proceed.');
-                setLoading(false);
-                return;
+                if (!cameraStatus.granted) {
+                    Alert.alert(
+                        'Permission Required',
+                        'Camera access is needed for identity verification. Please enable it in settings.',
+                        [
+                            { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
+                            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+                        ]
+                    );
+                    setLoading(false);
+                    return;
+                }
             }
 
             // 2. Get Location
@@ -68,7 +86,8 @@ export default function PermissionsScreen({ navigation, route }) {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <SafeAreaView style={styles.container}>
+            <StatusBar style="dark" translucent />
 
             {/* Icon */}
             <View style={styles.permissionIcon}>
@@ -76,11 +95,11 @@ export default function PermissionsScreen({ navigation, route }) {
             </View>
 
             {/* Title */}
-            <Text style={styles.title}>Permissions Needed</Text>
+            <Text style={styles.title}>Permission Access</Text>
 
             {/* Subtitle */}
             <Text style={styles.subtitle}>
-                To verify your identity, we need access to:
+                The app requires access to the following to conduct the mock exam:
             </Text>
 
             {/* Permission List */}
@@ -101,8 +120,12 @@ export default function PermissionsScreen({ navigation, route }) {
                 {loading ? (
                     <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                    <Text style={styles.buttonText}>ALLOW ACCESS</Text>
+                    <Text style={styles.buttonText}>CONTINUE</Text>
                 )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
 
         </SafeAreaView>
@@ -163,5 +186,13 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    cancelButton: {
+        marginTop: 15,
+        padding: 10,
+    },
+    cancelButtonText: {
+        color: '#666',
+        fontSize: 16,
     },
 });
