@@ -13,6 +13,14 @@ const { job, generateAndSendReport, checkMissedReport } = require('./cronService
 
 const app = express();
 
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+app.get("/", (req, res) => {
+  res.status(200).send("Backend Running");
+});
+
 /* ===============================
    ✅ Azure Port (IMPORTANT)
 ================================ */
