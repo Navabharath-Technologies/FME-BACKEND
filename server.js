@@ -2,29 +2,20 @@ require('dotenv').config();
 const express = require('express');
 const sql = require('mssql');
 const path = require('path');
-
 const cors = require('cors');
+
 const questionsData = require('./questions_data');
 const dbConfig = require('./dbConfig');
 const { sendCertificateEmail, sendOtpEmail } = require('./emailService');
 const { sendPhoneEmailOtp } = require('./phoneEmailService');
-
 const { job, generateAndSendReport, checkMissedReport } = require('./cronService');
 
 const app = express();
 
-app.get("/health", (req, res) => {
-  res.status(200).send("OK");
-});
-
-app.get("/", (req, res) => {
-  res.status(200).send("Backend Running");
-});
-
 /* ===============================
    ✅ Azure Port (IMPORTANT)
 ================================ */
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 /* ===============================
    ✅ Middlewares
@@ -34,18 +25,18 @@ app.use(express.json({ limit: '200mb' }));
 app.use(express.urlencoded({ limit: '200mb', extended: true }));
 
 /* ===============================
-   ✅ HEALTH CHECK (FOR 100%)
+   ✅ Health Check (Azure)
 ================================ */
-app.get('/', (req, res) => {
-  res.status(200).send('Backend API Running');
-});
-
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+app.get('/', (req, res) => {
+  res.status(200).send('Backend Running');
+});
+
 /* ===============================
-   Request Logging
+   Logging
 ================================ */
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -55,14 +46,7 @@ app.use((req, res, next) => {
 /* ===============================
    Static Files
 ================================ */
-app.use('/public', express.static(path.join(__dirname, 'public'), {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.pdf')) {
-      res.setHeader('Content-Disposition', 'inline');
-      res.setHeader('Content-Type', 'application/pdf');
-    }
-  }
-}));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 /* ===============================
    OTP Store
@@ -70,57 +54,17 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
 const otpStore = {};
 
 /* ===============================
-   Database Init
+   Database Connection
 ================================ */
-async function initializeDatabase() {
-  try {
-    const pool = await sql.connect(dbConfig);
-    console.log("Database schema verified.");
-  } catch (err) {
-    console.error("Database initialization failed:", err);
-  }
-}
-
-/* ===============================
-   DB Connection
-================================ */
-sql.connect(dbConfig).then(pool => {
-  if (pool.connected) {
-    console.log('Connected to SQL Server');
-    initializeDatabase();
-  }
-}).catch(err => {
-  console.error('Database connection failed:', err);
-});
-
-/* ===============================
-   Upload Photo
-================================ */
-app.post('/api/upload-photo', async (req, res) => {
-  try {
-    const { email, photo } = req.body;
-
-    if (!email || !photo) {
-      return res.status(400).json({ message: 'Email and Photo are required' });
+sql.connect(dbConfig)
+  .then(pool => {
+    if (pool.connected) {
+      console.log('Connected to SQL Server');
     }
-
-    const pool = await sql.connect(dbConfig);
-
-    await pool.request()
-      .input('email', sql.NVarChar, email)
-      .input('photo', sql.NVarChar(sql.MAX), photo)
-      .query(`
-        UPDATE FME_logins.users 
-        SET photo = @photo 
-        WHERE email = @email
-      `);
-
-    res.status(200).json({ message: 'Photo uploaded successfully', success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+  })
+  .catch(err => {
+    console.error('Database connection failed:', err);
+  });
 
 /* ===============================
    LOGIN / REGISTER
@@ -166,15 +110,51 @@ app.post('/api/login', async (req, res) => {
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    otpStore[email] = otp;
 
-    await sendOtpEmail(email, otp);
+    if (otpChannel === 'sms') {
+      otpStore[phone] = otp;
+      await sendPhoneEmailOtp(phone, otp);
+    } else {
+      otpStore[email] = otp;
+      await sendOtpEmail(email, otp);
+    }
 
     res.status(200).json({ message: 'OTP Sent', success: true });
 
   } catch (err) {
-    console.error(err);
+    console.error('Login Error:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/* ===============================
+   VERIFY OTP (FIXED VERSION)
+================================ */
+app.post('/api/verify-otp', (req, res) => {
+  try {
+    const { email, phone, otp } = req.body;
+
+    console.log("Verify OTP Request:", req.body);
+
+    if (!otp) {
+      return res.status(400).json({ success: false, message: "OTP required" });
+    }
+
+    if (phone && otpStore[phone] && otpStore[phone] === otp) {
+      delete otpStore[phone];
+      return res.status(200).json({ success: true, message: "OTP Verified" });
+    }
+
+    if (email && otpStore[email] && otpStore[email] === otp) {
+      delete otpStore[email];
+      return res.status(200).json({ success: true, message: "OTP Verified" });
+    }
+
+    return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+  } catch (error) {
+    console.error("OTP Verification Error:", error);
+    return res.status(500).json({ success: false, message: "Server error during verification" });
   }
 });
 
