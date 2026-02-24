@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "6",
+      "buildNumber": "7",
       "bundleIdentifier": "com.navabharathtechnologies.FMEapp",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -22,7 +22,10 @@
         "NSCameraUsageDescription": "Camera access is used to capture identity verification images during mock examination sessions to ensure the registered freelancer is taking the test. Images are used only for exam integrity verification.",
         "NSLocationWhenInUseUsageDescription": "Location access is used during mock examination sessions to verify that the freelancer is taking the test from their registered work location for compliance and monitoring purposes."
       },
-      "icon": "./assets/adaptive-icon.jpg"
+      "icon": "./assets/adaptive-icon.jpg",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "versionCode": 6,
@@ -33,7 +36,8 @@
         "backgroundColor": "#ffffff"
       },
       "softwareKeyboardLayoutMode": "pan",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -56,6 +60,9 @@
       "eas": {
         "projectId": "bd2179c2-883b-4acc-ace5-7df16bdc6b94"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bd2179c2-883b-4acc-ace5-7df16bdc6b94"
     }
   }
 }
