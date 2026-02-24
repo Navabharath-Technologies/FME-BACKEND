@@ -154,8 +154,8 @@ export default function HomeScreen({ navigation }) {
             <StatusBar style="dark" translucent />
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'height' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
                 <ScrollView
                     contentContainerStyle={localStyles.scrollContainer}
