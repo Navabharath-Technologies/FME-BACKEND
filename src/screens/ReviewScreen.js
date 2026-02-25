@@ -58,7 +58,7 @@ export default function ReviewScreen({ route, navigation }) {
                     {/* Header with Logo and Tagline */}
                     <View style={localStyles.headerContainer}>
                         <Image source={require('../../assets/icon.png')} style={localStyles.logoImage} resizeMode="contain" />
-                        <Text style={globalStyles.title}>Facilitator Mock Exam App</Text>
+                        <Text style={localStyles.title}>Facilitator Mock Exam App</Text>
                     </View>
 
                     {/* Table Header */}
@@ -212,9 +212,14 @@ const localStyles = StyleSheet.create({
     },
     logoImage: {
         width: 80,
-        height: 80,
+        height: 90,
         marginBottom: 10,
-        borderRadius: 40,
+    },
+    title: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1a7161',
+        textAlign: 'center',
     },
     col1: {
         flex: 0.55,

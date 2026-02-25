@@ -47,12 +47,12 @@ export default function ExaminationScreen({ route, navigation }) {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <StatusBar style="dark" translucent />
-            <ScrollView contentContainerStyle={localStyles.scrollContainer}>
+            <ScrollView contentContainerStyle={localStyles.scrollContainer} showsVerticalScrollIndicator={false}>
 
                 {/* App Header with Logo */}
-                <View style={globalStyles.header}>
+                <View style={localStyles.header}>
                     <Image source={require('../../assets/icon.png')} style={localStyles.logoImage} resizeMode="contain" />
-                    <Text style={globalStyles.title}>Facilitator Mock Exam App</Text>
+                    <Text style={localStyles.title}>Facilitator Mock Exam App</Text>
                 </View>
 
                 <View style={localStyles.formContainer}>
@@ -68,6 +68,7 @@ export default function ExaminationScreen({ route, navigation }) {
                                 setEmail(cleaned);
                             }}
                             placeholder="Enter Email ID"
+                            placeholderTextColor="#ccc"
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
@@ -81,6 +82,7 @@ export default function ExaminationScreen({ route, navigation }) {
                             value={phone}
                             onChangeText={setPhone}
                             placeholder="Enter Mobile Number"
+                            placeholderTextColor="#ccc"
                             keyboardType="phone-pad"
                         />
                     </View>
@@ -92,20 +94,19 @@ export default function ExaminationScreen({ route, navigation }) {
                             style={[localStyles.input, localStyles.disabledInput]}
                             value={programId}
                             onChangeText={setProgramId}
-                            editable={false} // Assuming default ID is fixed or pre-filled?
+                            editable={false}
                         />
                     </View>
 
                     {/* Next Button */}
                     <TouchableOpacity style={localStyles.nextButton} onPress={handleNext}>
-                        <Text style={localStyles.nextButtonText}>Next &gt;&gt;</Text>
+                        <Text style={localStyles.nextButtonText}>NEXT &gt;&gt;</Text>
                     </TouchableOpacity>
 
-
                 </View>
+
             </ScrollView >
 
-            {/* Dynamic Help Button */}
             <FloatingHelpButton />
             <LogoLoader visible={loading} />
         </SafeAreaView>
@@ -118,29 +119,33 @@ const localStyles = StyleSheet.create({
         flexGrow: 1,
         backgroundColor: '#fff',
     },
-    headerBanner: {
-        backgroundColor: '#1a7161', // Brand Color
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        marginBottom: 20,
-        marginTop: 40,
+    header: {
+        alignItems: 'center',
+        paddingTop: 30,
+        paddingBottom: 20,
     },
-    headerTitle: {
-        color: '#fff',
+    logoImage: {
+        width: 80,
+        height: 90,
+        marginBottom: 10,
+    },
+    title: {
         fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center', // Centered title
+        fontWeight: '700',
+        color: '#1a7161',
+        textAlign: 'center',
     },
     formContainer: {
-        padding: 20,
+        paddingHorizontal: 25,
+        paddingTop: 10,
     },
     inputGroup: {
         marginBottom: 20,
     },
     label: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#000',
         marginBottom: 8,
     },
     required: {
@@ -148,40 +153,35 @@ const localStyles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#e0e0e0',
         borderRadius: 4,
-        padding: 10,
-        fontSize: 16,
+        padding: 14,
+        fontSize: 14,
         color: '#333',
         backgroundColor: '#fff',
     },
     disabledInput: {
         backgroundColor: '#f5f5f5',
-        color: '#777',
+        color: '#555',
     },
     nextButton: {
-        backgroundColor: '#1a7161', // Matched with Home/Global Primary
-        paddingVertical: 15,
+        backgroundColor: '#1f7158',
+        paddingVertical: 16,
         borderRadius: 6,
         alignItems: 'center',
         marginTop: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
     },
     nextButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
-        textTransform: 'uppercase',
     },
-    logoImage: {
-        width: 80,
-        height: 80,
-        marginBottom: 10,
-        borderRadius: 40,
+    helpContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+        position: 'relative',
+        minHeight: 120, // Add clear space at the bottom to offset the negative margin of the help button
     },
 });
 

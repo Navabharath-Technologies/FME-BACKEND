@@ -1,0 +1,13 @@
+﻿c845cf4 fix: align all package versions to Expo SDK 54 using expo install --fix
+M	package-lock.json
+M	package.json
+353f072 fix: add .npmrc legacy-peer-deps for EAS build server npm install
+A	.npmrc
+dfe9549 fix: restore correct package.json main entry (expo/AppEntry.js), restore all RN deps
+M	package-lock.json
+M	package.json
+fd86b3f fix: add metro.config.js to exclude server.js from iOS bundle, bump buildNumber to 7
+M	app.json
+A	metro.config.js
+831f818 fix: restore full server.js with all routes + Azure health check + express.json + port 8080
+M	server.js

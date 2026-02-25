@@ -162,10 +162,9 @@ export default function HomeScreen({ navigation }) {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* ... Header and Inputs (unchanged) ... */}
-                    <View style={globalStyles.header}>
+                    <View style={localStyles.header}>
                         <Image source={require('../../assets/icon.png')} style={localStyles.logoImage} resizeMode="contain" />
-                        <Text style={globalStyles.title}>Facilitator Mock Exam App</Text>
+                        <Text style={localStyles.title}>Facilitator Mock Exam App</Text>
                     </View>
 
                     <View style={localStyles.welcomeBox}>
@@ -176,26 +175,25 @@ export default function HomeScreen({ navigation }) {
                         <Text style={localStyles.welcomeList}>3. The Mobile Number provided during registration.</Text>
                     </View>
 
-                    <View style={globalStyles.inputGroup}>
-                        <Text style={globalStyles.label}>ROLE</Text>
+                    <View style={localStyles.inputGroup}>
+                        <Text style={localStyles.label}>ROLE</Text>
                         <TextInput
-                            style={[globalStyles.input, { backgroundColor: '#e0e0e0', color: '#555' }]}
+                            style={[localStyles.input, { backgroundColor: '#e2e2e2', color: '#333' }]}
                             value="Facilitator"
                             editable={false}
                         />
                     </View>
 
-                    <View style={globalStyles.inputGroup}>
-                        <Text style={globalStyles.label}>NAME</Text>
+                    <View style={localStyles.inputGroup}>
+                        <Text style={localStyles.label}>NAME</Text>
                         <TextInput
-                            style={[globalStyles.input, nameError ? { borderColor: 'red', borderWidth: 1 } : null]}
+                            style={[localStyles.input, nameError ? { borderColor: 'red' } : null]}
                             placeholder="Full Name"
+                            placeholderTextColor="#ccc"
                             value={name}
                             maxLength={20}
                             onChangeText={(text) => {
-                                // Auto-capitalization: Lowercase everything first -> Capitalize first letter of each word
                                 let newText = text.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-
                                 setName(newText);
                                 if (newText && !/^[a-zA-Z\s]*$/.test(newText)) {
                                     setNameError('Name should not contain special characters.');
@@ -206,8 +204,6 @@ export default function HomeScreen({ navigation }) {
                                 }
                             }}
                             onBlur={() => {
-                                // Initials logic: Scan parts of the name
-                                // If a part is 2 letters and has NO vowels (likely initials like 'vr', 'sk'), format as 'V R', 'S K'
                                 let parts = name.split(' ');
                                 parts = parts.map(p => {
                                     if (p.length === 2 && !/[aeiouAEIOU]/.test(p)) {
@@ -224,15 +220,15 @@ export default function HomeScreen({ navigation }) {
                         {nameError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{nameError}</Text> : null}
                     </View>
 
-                    <View style={globalStyles.inputGroup}>
-                        <Text style={globalStyles.label}>EMAIL</Text>
+                    <View style={localStyles.inputGroup}>
+                        <Text style={localStyles.label}>EMAIL</Text>
                         <TextInput
                             ref={emailRef}
-                            style={[globalStyles.input, emailError ? { borderColor: 'red', borderWidth: 1 } : null]}
+                            style={[localStyles.input, emailError ? { borderColor: 'red' } : null]}
                             placeholder="Email Address"
+                            placeholderTextColor="#ccc"
                             value={email}
                             onChangeText={(text) => {
-                                // Allow only a-z, 0-9, @, .
                                 const cleaned = text.replace(/[^a-zA-Z0-9@.]/g, '').toLowerCase();
                                 setEmail(cleaned);
                                 setEmailError('');
@@ -246,12 +242,13 @@ export default function HomeScreen({ navigation }) {
                         {emailError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{emailError}</Text> : null}
                     </View>
 
-                    <View style={globalStyles.inputGroup}>
-                        <Text style={globalStyles.label}>MOBILE</Text>
+                    <View style={localStyles.inputGroup}>
+                        <Text style={localStyles.label}>MOBILE</Text>
                         <TextInput
                             ref={phoneRef}
-                            style={[globalStyles.input, phoneError ? { borderColor: 'red', borderWidth: 1 } : null]}
+                            style={[localStyles.input, phoneError ? { borderColor: 'red' } : null]}
                             placeholder="Mobile Number"
+                            placeholderTextColor="#ccc"
                             value={phone}
                             onChangeText={(text) => {
                                 setPhone(text);
@@ -265,145 +262,103 @@ export default function HomeScreen({ navigation }) {
                         {phoneError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{phoneError}</Text> : null}
                     </View>
 
-                    <TouchableOpacity style={globalStyles.btnPrimary} onPress={handleSubmit} disabled={loading}>
-                        <Text style={globalStyles.btnText}>{loading ? 'SUBMITTING...' : 'SUBMIT'}</Text>
-                    </TouchableOpacity>
+                    <View style={localStyles.submitButtonContainer}>
+                        <TouchableOpacity style={localStyles.btnPrimary} onPress={handleSubmit} disabled={loading}>
+                            <Text style={localStyles.btnText}>{loading ? 'SUBMITTING...' : 'SUBMIT'}</Text>
+                        </TouchableOpacity>
+                    </View>
 
                 </ScrollView>
-
-
-
-                {/* Dynamic Help Button */}
-                <FloatingHelpButton />
             </KeyboardAvoidingView>
             <LogoLoader visible={loading} />
+            <FloatingHelpButton />
         </SafeAreaView>
     );
 }
 
 const localStyles = StyleSheet.create({
     scrollContainer: {
-        padding: 20,
-        backgroundColor: '#fff',
+        paddingHorizontal: 25,
+        paddingTop: 40,
+        paddingBottom: 40,
+        backgroundColor: '#ffffff',
         flexGrow: 1,
-        justifyContent: 'center',
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    logoImage: {
+        width: 70,
+        height: 80,
+        marginBottom: 10,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1a7161',
+        textAlign: 'center',
     },
     welcomeBox: {
-        backgroundColor: '#eff9f1',
+        backgroundColor: '#f1f8f3',
         borderRadius: 4,
         padding: 15,
+        paddingLeft: 20,
         marginBottom: 25,
-        borderLeftWidth: 5,
+        borderLeftWidth: 4,
         borderLeftColor: '#1a7161',
     },
     welcomeTitle: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#555',
+        fontWeight: '600',
+        color: '#333',
         marginBottom: 10,
     },
     welcomeText: {
-        fontSize: 11,
-        color: '#666',
-        marginBottom: 4,
+        fontSize: 12,
+        color: '#555',
+        marginBottom: 6,
     },
     welcomeList: {
-        fontSize: 11,
-        color: '#666',
-        marginLeft: 10,
-        marginBottom: 2,
-    },
-    logoImage: {
-        width: 80,
-        height: 80,
-        marginBottom: 10,
-        borderRadius: 40,
-    },
-    // Modal Styles
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 20,
-        elevation: 5,
-    },
-    closeButton: {
-        alignSelf: 'flex-end',
-        padding: 5,
-    },
-    closeButtonText: {
-        fontSize: 24,
-        color: '#999',
-        lineHeight: 24,
-    },
-    otpTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1a7161',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    messageBox: {
-        padding: 10,
-        borderRadius: 4,
-        marginBottom: 20,
-    },
-    success: {
-        backgroundColor: '#f0ffee',
-        borderColor: '#dff0df',
-        borderWidth: 1,
-    },
-    successText: {
-        color: '#4caf50',
         fontSize: 12,
-        textAlign: 'center',
-    },
-    warning: {
-        backgroundColor: '#fff8e1',
-        borderColor: '#faebcc',
-        borderWidth: 1,
-    },
-    warningText: {
-        color: '#8a6d3b',
-        fontSize: 11,
-        textAlign: 'center',
-    },
-    otpInstruction: {
-        textAlign: 'center',
         color: '#555',
-        marginBottom: 15,
+        marginBottom: 3,
+        paddingLeft: 5,
     },
-    otpContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    inputGroup: {
         marginBottom: 20,
-        paddingHorizontal: 10,
     },
-    otpInput: {
-        width: 50,
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        textAlign: 'center',
-        fontSize: 20,
-        fontWeight: '600',
-        backgroundColor: '#fafafa',
-    },
-    timerBox: {
-        backgroundColor: '#e3f2fd',
-        padding: 10,
-        borderRadius: 4,
-        marginBottom: 15,
-        alignItems: 'center',
-    },
-    timerText: {
-        color: '#777',
+    label: {
         fontSize: 12,
+        fontWeight: 'bold',
+        color: '#000',
+        marginBottom: 8,
+        letterSpacing: 0.5,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        padding: 14,
+        fontSize: 14,
+        color: '#333',
+        backgroundColor: '#fff',
+    },
+    btnPrimary: {
+        backgroundColor: '#1f7158',
+        padding: 16,
+        borderRadius: 6,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    btnText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    submitButtonContainer: {
+        position: 'relative',
+        marginTop: 10,
+        marginBottom: 45, // Extra space below for the lowered overlapping help button
     },
 });

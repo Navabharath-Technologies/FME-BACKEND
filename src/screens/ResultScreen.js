@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, BackHandler, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, BackHandler, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { globalStyles } from '../styles';
+import FloatingHelpButton from '../components/FloatingHelpButton';
 
 export default function ResultScreen({ route, navigation }) {
     const { score, totalQuestions, name } = route.params || { score: 0, totalQuestions: 0, name: 'User' };
@@ -22,30 +22,35 @@ export default function ResultScreen({ route, navigation }) {
     return (
         <SafeAreaView style={localStyles.container}>
             <StatusBar style="dark" translucent />
-            <ScrollView contentContainerStyle={localStyles.scrollContainer} bounces={false}>
+            <ScrollView contentContainerStyle={localStyles.scrollContainer} bounces={false} showsVerticalScrollIndicator={false}>
 
-                {/* 1. Header (Logo + Title) */}
-                <View style={globalStyles.header}>
+                {/* header */}
+                <View style={localStyles.header}>
                     <Image source={require('../../assets/icon.png')} style={localStyles.logoImage} resizeMode="contain" />
-                    <Text style={globalStyles.title}>Facilitator Mock Exam App</Text>
+                    <Text style={localStyles.title}>Facilitator Mock Exam App</Text>
                 </View>
 
-                {/* 2. Success Message Box */}
-                <View style={localStyles.successBox}>
-                    <Text style={localStyles.successText}>
-                        Examination Submitted Successfully!
-                    </Text>
-                    <Text style={localStyles.subSuccessText}>
-                        Results will be mailed to registered email address
-                    </Text>
-                </View>
+                <View style={localStyles.content}>
+                    {/* Success Message Box */}
+                    <View style={localStyles.successBox}>
+                        <Text style={localStyles.successText}>
+                            Examination Submitted Successfully!
+                        </Text>
+                        <Text style={localStyles.subSuccessText}>
+                            Results will be mailed to registered email address
+                        </Text>
+                    </View>
 
-                {/* 4. Footer / Button */}
-                <TouchableOpacity style={globalStyles.btnPrimary} onPress={() => navigation.navigate('Home')}>
-                    <Text style={globalStyles.btnText}>Return to Home</Text>
-                </TouchableOpacity>
+                    {/* Return Button */}
+                    <TouchableOpacity style={localStyles.homeButton} onPress={() => navigation.navigate('Home')}>
+                        <Text style={localStyles.homeButtonText}>RETURN TO HOME</Text>
+                    </TouchableOpacity>
+                </View>
 
             </ScrollView>
+
+            <FloatingHelpButton />
+
         </SafeAreaView>
     );
 }
@@ -57,57 +62,65 @@ const localStyles = StyleSheet.create({
     },
     scrollContainer: {
         flexGrow: 1,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+    },
+    header: {
         alignItems: 'center',
-        paddingHorizontal: 20,
-        justifyContent: 'center', // Center content vertically like Home
+        paddingBottom: 20,
     },
     logoImage: {
         width: 80,
-        height: 80,
+        height: 90,
         marginBottom: 10,
-        borderRadius: 40,
     },
-    // Success Box
+    title: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1a7161',
+        textAlign: 'center',
+    },
+    content: {
+        paddingHorizontal: 25,
+        paddingBottom: 40,
+    },
     successBox: {
         width: '100%',
-        backgroundColor: '#e8f5e9',
+        backgroundColor: '#eaf4eb',
         paddingVertical: 25,
         paddingHorizontal: 20,
-        borderRadius: 4,
+        borderRadius: 6,
         borderWidth: 1,
         borderColor: '#c8e6c9',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 30,
         borderLeftWidth: 5,
-        borderLeftColor: '#2e7d32', // Make it pop like Home welcome box
+        borderLeftColor: '#0d6b1d', // matches inner brand color
     },
     successText: {
-        color: '#2e7d32',
+        color: '#0d6b1d',
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 5,
+        marginBottom: 8,
     },
     subSuccessText: {
-        color: '#555',
+        color: '#444',
         fontSize: 13,
         textAlign: 'center',
     },
-    // Score
-    scoreContainer: {
+    homeButton: {
+        backgroundColor: '#1f7158',
+        paddingVertical: 16,
+        borderRadius: 6,
         alignItems: 'center',
-        marginBottom: 30,
+        marginTop: 10,
+        width: '100%',
     },
-    resultLabel: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 5,
-    },
-    scoreText: {
-        fontSize: 20, // Slightly larger
+    homeButtonText: {
+        color: '#fff',
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#1a7161',
     },
 });
