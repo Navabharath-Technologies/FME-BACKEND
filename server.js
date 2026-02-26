@@ -52,9 +52,9 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
 }));
 
 /* ============================
-   OTP STORE
+   OTP STORE (MIGRATED TO DB)
 ============================ */
-const otpStore = {};
+// const otpStore = {}; // DEPRECATED: Caused issues with Azure App Service multi-instance load balancing.
 
 /* ============================
    DATABASE INIT
@@ -139,6 +139,13 @@ async function initializeDatabase() {
             if (reportedCheck.recordset.length === 0) {
                 await pool.query(`ALTER TABLE FME_logins.users ADD is_reported BIT DEFAULT 0`);
                 console.log('is_reported column added.');
+            }
+
+            // Check OTP
+            const otpCheck = await pool.query(`SELECT * FROM sys.columns WHERE Name = N'otp' AND Object_ID = Object_ID(N'[FME_logins].[users]')`);
+            if (otpCheck.recordset.length === 0) {
+                await pool.query(`ALTER TABLE FME_logins.users ADD otp NVARCHAR(10)`);
+                console.log('OTP column added for persistent cloud storage.');
             }
         }
 
@@ -284,10 +291,20 @@ app.post('/api/login', async (req, res) => {
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
+        // 1) SAVE THE GENERATED OTP TO THE DATABASE INSTEAD OF LOCAL MEMORY
+        await pool.request()
+            .input('otp', sql.NVarChar, otp)
+            .input('email', sql.NVarChar, email)
+            .input('phone', sql.NVarChar, phone)
+            .query(`
+                UPDATE FME_logins.users 
+                SET otp = @otp 
+                WHERE email = @email AND phone_number = @phone
+            `);
+
         if (otpChannel === 'sms') {
-            otpStore[phone] = otp;
             console.log(`\n================================`);
-            console.log(`[OTP Generated] For ${phone}: ${otp}`);
+            console.log(`[OTP Generated in DB] For ${phone}: ${otp}`);
             console.log(`================================\n`);
 
             const sent = await sendPhoneEmailOtp(phone, otp);
@@ -297,11 +314,8 @@ app.post('/api/login', async (req, res) => {
                 return res.status(200).json({ message: 'OTP Generated (Check Console). SMS failed (Config missing?)', success: true });
             }
         } else {
-            otpStore[email] = otp;
-            otpStore[phone] = otp;
-
             console.log(`\n================================`);
-            console.log(`[OTP Generated] For ${email}: ${otp}`);
+            console.log(`[OTP Generated in DB] For ${email}: ${otp}`);
             console.log(`================================\n`);
 
             await sendOtpEmail(email, otp);
@@ -327,8 +341,18 @@ app.post('/auth/send-otp', async (req, res) => {
         }
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        otpStore[phone] = otp;
-        console.log(`[Auth] OTP for ${phone}: ${otp}`);
+
+        const pool = await sql.connect(dbConfig);
+        await pool.request()
+            .input('otp', sql.NVarChar, otp)
+            .input('phone', sql.NVarChar, phone)
+            .query(`
+                UPDATE FME_logins.users 
+                SET otp = @otp 
+                WHERE phone_number = @phone
+            `);
+
+        console.log(`[Auth] OTP stored in DB for ${phone}: ${otp}`);
 
         const sent = await sendPhoneEmailOtp(phone, otp);
         if (sent) {
@@ -350,8 +374,18 @@ app.post('/auth/verify-otp', async (req, res) => {
         const { phone, otp } = req.body;
         if (!phone || !otp) return res.status(400).json({ message: 'Phone and OTP required' });
 
-        if (otpStore[phone] === otp) {
-            delete otpStore[phone];
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input('phone', sql.NVarChar, phone)
+            .input('otp', sql.NVarChar, otp)
+            .query(`SELECT * FROM FME_logins.users WHERE phone_number = @phone AND otp = @otp`);
+
+        if (result.recordset.length > 0) {
+            // Clear the OTP to prevent reuse
+            await pool.request()
+                .input('phone', sql.NVarChar, phone)
+                .query(`UPDATE FME_logins.users SET otp = NULL WHERE phone_number = @phone`);
+
             res.status(200).json({
                 status: 200,
                 message: 'OTP Verified',
@@ -403,26 +437,48 @@ app.post('/api/update-location', async (req, res) => {
 });
 
 /* ============================
-   VERIFY OTP
+   VERIFY OTP MAIN
 ============================ */
-app.post('/api/verify-otp', (req, res) => {
-    const { email, phone, otp } = req.body;
+app.post('/api/verify-otp', async (req, res) => {
+    try {
+        const { email, phone, otp } = req.body;
 
-    if (!otp) {
-        return res.status(400).send({ message: 'OTP is required' });
+        if (!otp) {
+            return res.status(400).send({ message: 'OTP is required' });
+        }
+
+        const pool = await sql.connect(dbConfig);
+        let queryCondition = '';
+        if (email && phone) {
+            queryCondition = `(email = @email OR phone_number = @phone)`;
+        } else if (email) {
+            queryCondition = `email = @email`;
+        } else if (phone) {
+            queryCondition = `phone_number = @phone`;
+        }
+
+        const result = await pool.request()
+            .input('email', sql.NVarChar, email || '')
+            .input('phone', sql.NVarChar, phone || '')
+            .input('otp', sql.NVarChar, otp)
+            .query(`SELECT * FROM FME_logins.users WHERE ${queryCondition} AND otp = @otp`);
+
+        if (result.recordset.length > 0) {
+            // Nullify the OTP so it can't be reused over and over
+            await pool.request()
+                .input('email', sql.NVarChar, email || '')
+                .input('phone', sql.NVarChar, phone || '')
+                .query(`UPDATE FME_logins.users SET otp = NULL WHERE ${queryCondition}`);
+
+            return res.status(200).json({ message: 'OTP Verified Successfully (DB)', success: true });
+        }
+
+        return res.status(400).json({ message: 'Invalid OTP', success: false });
+
+    } catch (err) {
+        console.error('Error in /api/verify-otp:', err);
+        res.status(500).json({ message: 'Server error' });
     }
-
-    if (phone && otpStore[phone] === otp) {
-        delete otpStore[phone];
-        delete otpStore[email];
-        return res.status(200).json({ message: 'OTP Verified Successfully (Local)', success: true });
-    } else if (email && otpStore[email] === otp) {
-        delete otpStore[email];
-        delete otpStore[phone];
-        return res.status(200).json({ message: 'OTP Verified Successfully (Local)', success: true });
-    }
-
-    return res.status(400).json({ message: 'Invalid OTP', success: false });
 });
 
 /* ============================
