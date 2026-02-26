@@ -9,7 +9,7 @@
             "client_info": {
                 "mobilesdk_app_id": "1:857798408586:android:43f289676cba929a4ab073",
                 "android_client_info": {
-                    "package_name": "com.navabharathtechnologies.FME"
+                    "package_name": "com.navabharathtechnologies.FMEapp"
                 }
             },
             "oauth_client": [
@@ -17,7 +17,7 @@
                     "client_id": "857798408586-ef7lgtvnhuathvr6obvrgs241apr6odo.apps.googleusercontent.com",
                     "client_type": 1,
                     "android_info": {
-                        "package_name": "com.navabharathtechnologies.FME",
+                        "package_name": "com.navabharathtechnologies.FMEapp",
                         "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
                     }
                 },
@@ -42,7 +42,7 @@
                             "client_id": "857798408586-f7jlk23usui1uqkh119qdidmvjavbeu1.apps.googleusercontent.com",
                             "client_type": 2,
                             "ios_info": {
-                                "bundle_id": "com.navabharathtechnologies.FME"
+                                "bundle_id": "com.navabharathtechnologies.FMEapp"
                             }
                         }
                     ]
