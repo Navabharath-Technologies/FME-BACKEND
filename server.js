@@ -558,6 +558,18 @@ app.get('/api/test-cron', async (req, res) => {
 });
 
 /* ============================
+   SUPPORT CONTACTS
+============================ */
+app.get('/api/support-contacts', (req, res) => {
+    // You can modify these values anytime without rebuilding the Android App!
+    res.status(200).json({
+        phone: '+918850120709',
+        email: 'support@navabharathtechnologies.com',
+        whatsapp: '+918850120709'
+    });
+});
+
+/* ============================
    START SERVER
 ============================ */
 app.listen(port, () => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Linking, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { API_URL } from '../config';
 
 const FloatingHelpButton = () => {
     const insets = useSafeAreaInsets();
@@ -9,6 +10,28 @@ const FloatingHelpButton = () => {
 
     // Animation value for width (0 = collapsed, 1 = expanded)
     const animValue = useRef(new Animated.Value(0)).current;
+
+    const [contacts, setContacts] = useState({
+        phone: '+918850120709', // Fallbacks just in case
+        email: 'support@navabharathtechnologies.com',
+        whatsapp: '+918850120709'
+    });
+
+    useEffect(() => {
+        // Fetch dynamic contact details from backend so no rebuild is needed
+        fetch(`${API_URL}/api/support-contacts`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.phone) {
+                    setContacts({
+                        phone: data.phone,
+                        email: data.email,
+                        whatsapp: data.whatsapp
+                    });
+                }
+            })
+            .catch(err => console.log('Failed to fetch dynamic contacts:', err));
+    }, []);
 
     useEffect(() => {
         // Toggle expanded state every 5 seconds
@@ -31,17 +54,15 @@ const FloatingHelpButton = () => {
     };
 
     const handleCallUs = () => {
-        // Replace with actual support number
-        Linking.openURL('tel:+919876543210').catch(err => console.error(err));
+        Linking.openURL(`tel:${contacts.phone}`).catch(err => console.error(err));
     };
 
     const handleEmailUs = () => {
-        Linking.openURL('mailto:support@navabharathtechnologies.com').catch(err => console.error(err));
+        Linking.openURL(`mailto:${contacts.email}`).catch(err => console.error(err));
     };
 
     const handleWhatsApp = () => {
-        // Replace with actual whatsapp number
-        Linking.openURL('whatsapp://send?phone=+919876543210').catch(err => console.error(err));
+        Linking.openURL(`whatsapp://send?phone=${contacts.whatsapp}`).catch(err => console.error(err));
     };
 
     // Interpolate animated value to a max-width for the text container
